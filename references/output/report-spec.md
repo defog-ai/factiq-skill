@@ -1,19 +1,15 @@
-# Report JSON and share_report
+# Report JSON local output format
 
-The `share_report` MCP tool (`question`, `report`, optional `model`) publishes
-the report and returns the server response plus a `share_url`. The server stores
-it as a completed, publicly shared FactIQ run, so the link renders on the
-standard share-report page: bulleted summary, sections of narrative + charts,
-per-chart Data Source line and "How we built this" lineage panel, methodology
-notes. The run also appears in your FactIQ history, and anyone opening the link
-can fork it into their own account.
+A FactIQ report object contains a summary, sections of narrative and charts,
+source details, lineage, and optional methodology notes. Save it as local JSON
+and render its charts with `term_chart.py`.
 
-The tool arguments are:
+A recommended wrapper is:
 
 ```
 question: "How has US unemployment evolved since 2022?"
-report:   { summary, sections, methodology_notes? }   # the report object below
-model:    "claude-opus-4-8 (factiq-skill)"             # optional
+report:   { summary, sections, methodology_notes? }
+model:    "model name"
 ```
 
 `model` is a free-text label for who authored the report — pass your own
@@ -50,10 +46,8 @@ stacked_area | map | heatmap`. **Stick to `line`, `bar`, `table`, and
 `text`** — the first three take the simple tabular format below, and `text`
 is the prose panel documented after it. The other types pass through with the
 in-house agent's full hydrated config structure, which is not documented
-here. For a geographic finding, publish the map as its own `share_chart`
-(fully supported — see `references/output/chart-spec.md`, **Maps**) and
-reference its share link from the section narrative, rather than embedding an
-undocumented map structure in the report.
+here. For a geographic finding, build a separate ChartSpec map using
+`references/output/chart-spec.md` and reference its local path in the narrative.
 
 Tabular chart fields:
 
@@ -205,12 +199,9 @@ because reports get them wrong most often:
 
 ## Validation and limits
 
-The `share_report` tool validates the report against the real chart schemas and
-returns a tool error naming the failing field paths (e.g.
-`sections[1].charts[0].x_column: Field required`). Fix and call it again —
-nothing is published until it validates. Server caps: 12 sections, 16 charts,
-1,200 rows and 40 columns per chart, 30k chars per narrative, 5k for the
-summary.
+Validate the required fields locally before rendering. Recommended limits are
+12 sections, 16 charts, 1,200 rows and 40 columns per chart, 30,000 characters
+per narrative, and 5,000 characters for the summary.
 
 ## Worked example
 
@@ -321,15 +312,11 @@ summary.
 3. Build the report object from the fetched values — assemble it in context, or
    write the data arrays with the Write tool / a small local Python script;
    don't hand-type data rows.
-4. Save the report object (or the full `share_report` argument object) to JSON,
-   then call `share_report` with `question`, `report` (the object), and
-   optional `model`.
-5. After `share_report` succeeds, render terminal previews from the same report
-   JSON:
+4. Save the report object or a wrapper such as
+   `{"question": "...", "report": {...}}` to JSON.
+5. Render terminal previews from the saved report JSON:
    `python3 "{plugin_root}/scripts/term_chart.py" report --report <file> --charset ascii --color never`
-6. Return the `share_url`, paste the terminal previews into your reply inside a
-   triple-backtick code block, and include the report's key findings. Do not
-   leave the previews only in the tool result.
+6. Return the JSON path, key findings, and terminal previews.
 
 ## Specialized report patterns
 

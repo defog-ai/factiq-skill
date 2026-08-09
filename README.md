@@ -8,9 +8,9 @@ World Bank, and more — plus live market data, earnings-call transcripts,
 executive media appearances, and satellite-derived data (fire detections,
 air-quality activity signals,
 rainfall, nighttime lights, shipping and port activity, reservoir levels).
-The agent discovers series, runs read-only SQL on FactIQ's database, computes 
-derived metrics, and publishes the result as a shareable FactIQ chart or report, 
-a terminal preview, or a bespoke local HTML visualization.
+The agent discovers series, runs read-only SQL, computes derived metrics, and
+returns a sourced answer, terminal preview, report JSON, or bespoke local HTML
+visualization.
 
 No codebase or hosted database is required — only a free
 [FactIQ account](https://factiq.com).
@@ -144,10 +144,9 @@ media-vs-earnings comparisons aligned by company, person, topic, and date.
 
 ## How it works
 
-**Your coding agent is the analyst**: it decomposes the question, finds the data, does 
-the math, authors the output, and publishes it — all through tool calls to
-the **FactIQ MCP server** (bundled in `.mcp.json`), which Claude Code and
-Codex talk to natively over a single OAuth connection.
+**Your coding agent is the analyst**: it finds the data, does the math, and
+authors a local output. Data access uses the **FactIQ MCP server** bundled in
+`.mcp.json` over one OAuth connection.
 
 ```
 ┌─────────────────────────────┐
@@ -163,12 +162,10 @@ Codex talk to natively over a single OAuth connection.
 │  fetch      run_sql (read-only), get_series, get_market_data,
 │             search_earnings_transcripts, search_media_appearances,
 │             search_news
-│  publish    share_chart, share_report
 └──────────────┬──────────────┘
                │
 ┌──────────────▼──────────────┐
-│  FactIQ data warehouse      │      ~20 official sources, one schema
-│  + factiq.com share pages   │      published charts/reports render here
+│  FactIQ data warehouse      │      official and derived data sources
 └─────────────────────────────┘
 ```
 
@@ -212,7 +209,7 @@ Where the behavior lives — the files contributors will touch:
   `skills/` directory
 - `references/data/` — the data layer: SQL idioms (`sql-guide.md`) and the
   dataset schema overview (`schemas.md`)
-- `references/output/` — publishing formats: ChartSpec (`chart-spec.md`),
+- `references/output/` — local output formats: ChartSpec (`chart-spec.md`),
   report JSON (`report-spec.md`), and the bespoke-viz guide (`viz-guide.md`)
 - `references/report-patterns/` — domain playbooks (monetary policy,
   bilateral trade, bilateral economic policy, fiscal-policy revenue, business
@@ -222,9 +219,9 @@ Where the behavior lives — the files contributors will touch:
   synthesis) all reports follow and routes each domain to its playbook, so
   adding a playbook doesn't touch SKILL.md
 - `commands/ask.md` — the `/factiq:ask` slash command (Claude Code)
-- `scripts/term_chart.py` — stdlib-only renderer that prints ANSI/ASCII
-  terminal previews from FactIQ ChartSpec JSON and `share_report` report
-  objects. It supports bar, simple line, and table fallback renderers
+- `scripts/term_chart.py` — stdlib-only renderer for ANSI/ASCII previews from
+  FactIQ ChartSpec and report JSON objects. It supports bar, simple line, and
+  table fallback renderers
 - `scripts/build_viz.py` — local-only tool that assembles fetched data into a
   self-contained HTML viz and screenshots it headless for iteration; usage in
   [`references/output/viz-guide.md`](references/output/viz-guide.md)
@@ -294,9 +291,8 @@ macro-risk snapshots.
   from real usage.
 - **Docs and fixes** — anything that makes the agent's first attempt land.
 
-Test a playbook by running the questions it targets end-to-end through the
-skill and checking the published output; a PR description that shows a
-before/after share link is the most convincing review material.
+Test a playbook by running its questions end to end and checking the saved
+chart or report output. Include exact before-and-after examples in the PR.
 
 ## Security
 

@@ -113,9 +113,7 @@ instantiation takes. The frequent case:
 ## Rules the method implies
 
 - **Report mode by default.** A question matching a pattern gets a compact
-  `share_report`, not a single quick chart — a lone chart can state a thesis
-  but cannot stage a dialectic. (Unless the user explicitly asks for only one
-  chart.)
+  multi-section report, not one chart, unless the user explicitly requests one.
 - **Cover the full concept.** Reducing a broad question to its easiest slice
   (monetary policy → just the rate path; trade policy → just goods flows) is
   skipping the antithesis pass by construction.

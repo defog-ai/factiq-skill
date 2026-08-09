@@ -1,10 +1,8 @@
-# ChartSpec and share_chart
+# ChartSpec local output format
 
-The `share_chart` MCP tool (`chart`, optional `question`) publishes the spec to
-the FactIQ backend and returns `{share_id, share_url}` — a live, rendered chart
-page. The chart is owned by your account, so you can edit it in place and
-restore earlier versions from the UI on `/share-chart/<id>`. Pass the ChartSpec
-object as the `chart` argument.
+ChartSpec is the structured JSON format used by `term_chart.py` and local
+FactIQ chart workflows. Save the object to JSON so the values, sources, and
+lineage remain available with the rendered preview.
 
 ## Minimal valid spec
 
@@ -95,12 +93,8 @@ Rules:
 - `mapId`: `custom/world` (countries), `custom/europe`, `countries/us/us-all`,
   or `countries/<cc>/<cc>-all` for in, cn, id, vn, th, my, ph, pk, bd, lk,
   mm, kh, np, kr, jp, tw, sg (state/province level).
-- `geoKey` values can be plain names, ISO codes, or Highcharts keys —
-  `share_chart` normalizes them ("Maharashtra", "IND", "in" all work) and a
-  bad value comes back as a validation error with suggestions. If the error
-  says the map draws no feature for a region (world map: Taiwan; India map:
-  Ladakh; Philippines/Sri Lanka maps draw provinces/districts, not regions),
-  drop that row rather than renaming it.
+- `geoKey` values can be plain names, ISO codes, or Highcharts keys. Check each
+  value against the selected map. Drop regions that the map does not draw.
 - One row per region — aggregate first; a region repeated across dates will
   not animate, it just overwrites.
 
@@ -200,14 +194,8 @@ Two rules the panel depends on:
    some series come back reverse-chronological, which would render a backwards
    x-axis.
 3. Validate locally that every `series[].key` and `xField.key` exists in the
-   `data` rows, and that the spec carries both `sources[]` and a `lineage`
-   DAG (see above) — they are what the share page shows as the Data Source
-   line and the "How we built this" panel.
-4. Save the final spec to JSON, then call `share_chart` with `chart` = the spec
-   object (and `question` = the question it answers).
-5. After `share_chart` succeeds, render a terminal preview from the same saved
-   spec:
+   data rows. Include `sources[]` and `lineage` so the output remains auditable.
+4. Save the final spec to JSON and render a terminal preview:
    `python3 "{plugin_root}/scripts/term_chart.py" render --spec <file> --charset ascii --color never`
-6. Return the `share_url` and paste the terminal preview into your reply inside
-   a triple-backtick code block. Do not leave the preview only in the tool
-   result.
+5. Return the JSON path and paste the terminal preview into your reply inside a
+   triple-backtick code block.
