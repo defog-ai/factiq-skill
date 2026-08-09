@@ -30,6 +30,7 @@ provider can take 5–30 s (rainfall occasionally longer).
 | `aerosol_index_tropomi` | UV aerosol index, area mean (Sentinel-5P) | Smoke plumes, dust storms, severe haze — the air-quality-disruption signal. Works over clouds, unlike the gas columns. A dimensionless index (sustained values above ~1 mean heavy smoke or dust), not a PM2.5 concentration | 2018→ | ~3 days |
 | `ndvi_s2` | Vegetation index NDVI, cloud-masked area mean (Sentinel-2) | Crop condition ahead of harvest statistics — compare the same season across years (sowing → peak canopy → harvest is a normal arc, not a trend) | 2017→ | ~2–5 days |
 | `precip_chirps` | Rainfall, gauge-calibrated satellite (CHIRPS 0.05°) | Monsoon adequacy, drought/flood risk → food prices, rural demand, hydro | 1981→ | ~2 days prelim |
+| `precip_imerg` | Rainfall (NASA IMERG V07 Late, 0.1°) | Global drought, flood, and water-supply context where CHIRPS has no coverage | 2000→ | ~1–2 days |
 | `temperature_power` | 2 m air temperature mean/max/min (NASA POWER, MERRA-2 0.5°) | Heatwaves → electricity demand, labour productivity, crop stress | 1981→ | ~3 days |
 | `soil_moisture_power` | Root-zone soil wetness 0–1 (NASA POWER, MERRA-2) | Sowing conditions and agricultural drought ahead of production data | 1981→ | ~3 days |
 
@@ -99,6 +100,12 @@ fire radiative power) aggregating the whole requested window.
   when arguing intensity rather than frequency.
 - `precip_chirps` recent days are preliminary and revised in the final
   monthly product (~3rd week of the following month).
+- `precip_chirps` ends at 50°N and 50°S. Use `precip_imerg` outside
+  that range. Within CHIRPS coverage, prefer its finer, gauge-calibrated data.
+- `precip_imerg` returns IMERG V07 Late satellite rainfall on a global 0.1°
+  grid. It returns daily totals in millimetres and adds
+  them for monthly output. A final month can be incomplete; read the response
+  notes before using it. It does not show rainfall differences inside one cell.
 - POWER datasets are 0.5° reanalysis — honest at state/country scale, blind to
   city microclimates. Very small or very large regions sample the centroid
   cell (a `notes` entry appears for large ones).
