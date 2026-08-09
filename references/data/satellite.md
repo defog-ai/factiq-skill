@@ -15,9 +15,10 @@ get_geo_data(dataset, region, start_date, end_date, aggregation="monthly")
 ```
 
 Returns `{columns, results, units, region, organization, attribution,
-caveats, notes?}` — a small time series, at most 50 rows. Results are cached
-server-side, so repeating a call is cheap; the first call to an external
-provider can take 5–30 s (rainfall occasionally longer).
+caveats, notes?}` — a small time series, at most 50 rows (the spatial modes
+below return up to 500). Results are cached server-side, so repeating a call
+is cheap; the first call to an external provider can take 5–30 s (rainfall
+occasionally longer).
 
 ## Datasets
 
@@ -61,25 +62,46 @@ At most 50 intervals per call (~4 years monthly, ~7 weeks daily). Patterns:
 - Daily grain is for event windows (a flood week, a heatwave fortnight), not
   long ranges.
 
-## Mapping a fire's footprint — `aggregation="grid"` (fires_viirs only)
+## Mapping where the signal is — `aggregation="grid"`
 
-`fires_viirs` accepts a third aggregation, `"grid"`, that answers *where* the
-burning is instead of *how much over time*: no time series — one row per
-lat/lon grid cell (cell-centre latitude and longitude, detection count, total
-fire radiative power) aggregating the whole requested window.
+`fires_viirs`, `ndvi_s2`, and the four `*_tropomi` datasets accept a third
+aggregation, `"grid"`, that answers *where* the signal is instead of *how
+much over time*: no time series — one row per lat/lon grid cell (cell-centre
+latitude and longitude plus the cell's values) aggregating the whole
+requested window.
 
-- Window is capped at **92 days**: one burning season or one fire event per
-  call, not a multi-year history.
+- `fires_viirs` cells carry `fire_detections` and `total_frp_mw`. These are
+  **detection clusters, not fire perimeters** — say "detected fire activity",
+  not "burned area". If more than 500 cells had fires, the least-active are
+  dropped and a `notes` entry says how many and what share of detections the
+  kept cells still cover.
+- `ndvi_s2` and the `*_tropomi` cells carry the window-mean value (`ndvi`,
+  `no2_mol_m2`, `so2_mol_m2`, `co_mol_m2`, `uv_aerosol_index`) plus
+  `valid_obs_share`. The same cloud/quality rule as the time series applies
+  per cell — a cell with a low share rests on few clear-sky views.
+- Window is capped at **92 days**: one season or one event per call, not a
+  multi-year history.
 - Cell size is picked automatically from the region's size — roughly 1 km
-  cells for a single fire complex, coarser for a whole large country. At most
-  500 cells come back; if there were more, the least-active are dropped and a
-  `notes` entry says how many and what share of detections the kept cells
-  still cover.
-- Cells are **detection clusters, not fire perimeters** — say "detected fire
-  activity", not "burned area".
-- Use it to feed a coordinate bubble map (see the Maps section of
-  `references/output/chart-spec.md`) of a fire event or a burning season;
-  use `monthly`/`daily` for trends and comparisons.
+  cells for a single fire complex, coarser for a whole large country, and
+  never finer than the dataset's native resolution. At most 500 cells come
+  back.
+- Use it to feed a map (see the Maps section of
+  `references/output/chart-spec.md`): a bubble map of a fire event or burning
+  season, NO₂ across an industrial belt, NDVI across a growing region. Use
+  `monthly`/`daily` for trends and comparisons.
+
+## Exact fire locations — `aggregation="points"` (fires_viirs only)
+
+`fires_viirs` also accepts `"points"`: the individual detections, one row per
+detection — `latitude`, `longitude`, `date`, `frp_mw` — exact satellite
+coordinates, no binning.
+
+- Works only when the window has **at most 500 detections**. Above that the
+  call returns an error naming the actual count — narrow the region or dates,
+  or switch to `"grid"`.
+- Same 92-day window cap as `"grid"`.
+- `"grid"` always bins, even when the window is small — ask for `"points"`
+  explicitly when the map needs exact locations.
 
 ## Reading the results honestly
 
@@ -120,8 +142,8 @@ Sentinel-5P data…") is a licence requirement, not a courtesy.
 
 ## What this tool is not
 
-- Not a raster or tile service: results are regional aggregates (plus, for
-  fires only, the grid-cell footprint above) — never imagery.
+- Not a raster or tile service: results are regional aggregates (plus the
+  grid snapshots and fire detection points above) — never imagery.
 - Several satellite signals live in the WAREHOUSE instead of this tool, as
   the `satellite` SQL schema: monthly **nighttime lights** by country/state
   (precomputed — no hosted aggregation API exists) and **lake/reservoir water
