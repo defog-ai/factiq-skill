@@ -1,25 +1,17 @@
 ---
 name: factiq
 description: >
-  Answer economic and financial data questions with real FactIQ (worlddb)
-  data: US indicators (BLS employment/CPI, BEA GDP, Census trade, EIA energy,
-  USDA ERS, BTS transport); international data (China NBS/customs, India
-  MOSPI/RBI/trade, EU Comext, Singapore, IMF, World Bank); stocks,
-  commodities/forex; earnings-call transcripts; executive media appearances
-  from podcasts, TV interviews, and conferences; a curated business-news feed;
-  and satellite-derived data: nighttime lights by country and state,
-  lake and reservoir water levels, daily shipping and port activity
-  (chokepoint transits, port calls, seaborne trade estimates), plus on-demand
-  signals (fire detections/crop burning with mappable footprints, NO2/SO2/CO
-  industrial and combustion activity, smoke and dust aerosol, crop-condition
-  NDVI, monsoon rainfall, heatwaves, soil moisture — by country, state, or
-  bounding box). Use for unemployment, inflation, GDP, trade flows, energy, wages,
-  markets, earnings and executive-media intelligence, recent news context,
-  stubble burning, wildfires, air quality,
-  monsoon or drought conditions, nighttime lights, reservoir levels, shipping
-  or chokepoint traffic, economic charts or maps, terminal previews,
-  multi-section research reports, and custom HTML dashboards. Discover series, query SQL, compute, then return a sourced answer
-  or render the requested output. For bilateral trade, use the bundled SQL generators instead of hand-writing schema-specific queries.
+  Answer economic and financial data questions with FactIQ data: US and
+  international indicators, trade, markets, earnings calls, executive media,
+  business news, and satellite signals. Satellite coverage includes rainfall,
+  fires, air quality, NDVI, heat, soil moisture, nighttime lights, reservoir
+  levels, shipping, ports, and chokepoints by country, state, or bounding box.
+  Use for unemployment, inflation, GDP, wages, energy, trade flows, stocks,
+  commodities, forex, earnings intelligence, drought and monsoon conditions,
+  wildfires, economic charts and maps, terminal previews, research reports,
+  and custom HTML dashboards. Discover series, query read-only SQL, compute,
+  then return a sourced answer or local output. Use the bundled SQL generators
+  for bilateral trade.
 allowed-tools: >
   mcp__plugin_factiq_factiq__*,
   mcp__factiq__*,

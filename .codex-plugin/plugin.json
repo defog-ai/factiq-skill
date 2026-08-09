@@ -1,7 +1,7 @@
 {
   "name": "factiq",
-  "description": "Answer economic and financial data questions with real data from FactIQ — official data, markets, earnings calls, and executive media appearances — then publish charts, reports, terminal previews, or bespoke HTML visualizations.",
-  "version": "0.19.3",
+  "description": "Answer economic and financial data questions with real FactIQ data — official data, markets, earnings calls, and executive media appearances — then return sourced answers, terminal previews, report JSON, or bespoke local HTML visualizations.",
+  "version": "0.19.4",
   "author": {
     "name": "Defog"
   },
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "FactIQ",
     "shortDescription": "Economic and financial data analysis",
-    "longDescription": "Use FactIQ to answer economic and financial data questions with catalog search, read-only SQL, market data, earnings-transcript search, deterministic executive-media search, shareable charts, terminal previews, reports, and bespoke local HTML visualizations.",
+    "longDescription": "Use FactIQ for catalog search, read-only SQL, market data, earnings-transcript search, deterministic executive-media search, satellite signals, terminal previews, report JSON, and bespoke local HTML visualizations.",
     "developerName": "Defog",
     "category": "Finance",
     "capabilities": [
