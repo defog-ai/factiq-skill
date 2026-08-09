@@ -16,23 +16,17 @@ Answer this question with real data from FactIQ:
 Read `${CLAUDE_PLUGIN_ROOT}/skills/factiq/SKILL.md` first. If no question was
 provided above, ask the user what they want to know.
 
-Everything — discovery, fetching, and publishing — runs through the FactIQ MCP
-tools. If they aren't available or return an auth error, the MCP isn't
+Discovery and fetching run through the FactIQ MCP tools. Final output is local.
+If the tools are unavailable or return an auth error, the MCP is not
 connected — tell the user to authorize it (Claude Code: `/mcp` → factiq;
 Codex: `codex mcp login factiq`), then retry.
 
 **Pick the output mode before doing any data work:**
 
-- **Quick chart** — one focused shared chart, terminal preview, and short
-  narrative. Right when the question names a single metric, series, or
-  comparison: "How has X changed?", "X vs Y", "What is the current Z?".
-- **Terminal chart** — an ANSI/ASCII preview without a share link. Use only
-  when the user asks for terminal-only, ASCII-only, or local text output.
-- **Detailed report** — a multi-section shareable report (summary, 2–5
-  sections of narrative + charts, methodology notes) plus terminal previews of
-  the report charts. Right when the question is broad or analytical: "the state
-  of the US labor market", "what's driving inflation", "deep dive", or the user
-  says report / analysis / comprehensive.
+- **Quick chart** — one focused local chart, terminal preview, and short
+  narrative. Use for one metric, trend, or comparison.
+- **Detailed report** — a local multi-section report with summary, charts,
+  methodology notes, and terminal previews. Use for broad analytical requests.
 
 If the question clearly fits one mode, proceed without asking. Only when it
 is genuinely ambiguous — broad enough that a report would add value, but a
@@ -49,21 +43,14 @@ controls the thesis, antithesis, synthesis, and required data checks.
 Then follow the skill's orchestration workflow (catalog → discover → fetch →
 compute, all via the MCP tools) and finish per the mode:
 
-- **Quick chart** → build a ChartSpec (`references/output/chart-spec.md`), save it to
-  JSON, publish with the `share_chart` tool, run
+- **Quick chart** → build a ChartSpec (`references/output/chart-spec.md`),
+  save it to JSON, run
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/term_chart.py" render --spec <file> --charset ascii --color auto`,
-  and return the share URL, terminal preview, and a short narrative of what the
-  data shows.
-- **Terminal chart** → build a ChartSpec (`references/output/chart-spec.md`), save it
-  to JSON, run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/term_chart.py" render --spec <file> --charset ascii --color auto`,
-  and return the rendered output plus a short narrative without publishing.
+  and return the JSON path, terminal preview, and short narrative.
 - **Detailed report** → follow the skill's **Detailed reports** section and
-  `references/output/report-spec.md` (for covered domains, also the pattern
-  file `references/report-patterns/README.md` routes to), save the report
-  object to JSON, publish with the
-  `share_report` tool, run
+  `references/output/report-spec.md`, save the report object to JSON, run
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/term_chart.py" report --report <file> --charset ascii --color auto`,
-  and return the share URL, terminal previews, and the report's key findings.
+  and return the JSON path, terminal previews, and key findings.
 
 For report-mode questions that span multiple topics, companies, or data sources,
 decompose the research into parallel subagents after initial discovery — one

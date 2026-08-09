@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Render FactIQ charts as ANSI/ASCII terminal previews.
 
-This is a local-only companion to share_chart: feed it the same ChartSpec object
-you would publish, or a share_report report object, and it prints compact
+Feed this local-only renderer a ChartSpec or report object to print compact
+terminal output.
 terminal renderings. The renderer is stdlib-only and intentionally conservative:
 v1 handles bars, simple line charts, and falls back to a table for anything
 else.
@@ -463,7 +463,7 @@ def report_chart_to_spec(chart: dict[str, Any], fallback_title: str) -> dict[str
 
 def report_object(value: dict[str, Any]) -> dict[str, Any]:
     # Accept either the raw report object or a wrapper such as
-    # {"question": "...", "report": {...}} used as share_report arguments.
+    # {"question": "...", "report": {...}}.
     report = value.get("report")
     if isinstance(report, dict):
         return report
@@ -570,12 +570,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser(
         "report",
-        help="Print terminal previews for a share_report report object",
+        help="Print terminal previews for a report object",
     )
     p.add_argument(
         "--report",
         required=True,
-        help="Report JSON file, share_report args JSON, or '-' for stdin",
+        help="Report JSON file, wrapped report JSON, or '-' for stdin",
     )
     p.add_argument(
         "--type",

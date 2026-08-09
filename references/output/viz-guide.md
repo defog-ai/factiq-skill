@@ -1,8 +1,7 @@
 # Bespoke local visualizations
 
-This is the third FactIQ output mode, alongside the `share_chart` and
-`share_report` tools. Those publish to factiq.com against fixed schemas; this one
-produces a **self-contained local HTML file** you author freely. There is no
+This output mode produces a **self-contained local HTML file** that you author
+freely. There is no fixed schema or chart-type list.
 spec to satisfy and no fixed chart-type list — you write whatever HTML/JS the
 question calls for, render it, look at it, and fix what's wrong. That last
 loop is the method; everything else is plumbing.
@@ -231,8 +230,8 @@ separate technique. Lay panels out with CSS grid/flex inside `#root`.
 - Scales make sense: no flat line because an outlier blew out the domain; log
   scale where the data spans orders of magnitude; y-axis baseline honest.
 - Time axes are chronological and use real date formatting.
-- The title states the **finding with numbers**, not the topic — same bar as
-  `share_chart` (see `chart-spec.md`). Carry a source line at the bottom.
+- The title states the **finding with numbers**, not the topic. See
+  `chart-spec.md`. Carry a source line at the bottom.
 - Color: enough contrast on the dark background; a sane categorical palette;
   not red/green-only for accessibility. In ECharts the legend swatch takes its
   color from `series.itemStyle.color`, not `series.lineStyle.color` — a line

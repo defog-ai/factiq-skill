@@ -19,8 +19,7 @@ description: >
   monsoon or drought conditions, nighttime lights, reservoir levels, shipping
   or chokepoint traffic, economic charts or maps, terminal previews,
   multi-section research reports, and custom HTML dashboards. Discover series, query SQL, compute, then return a sourced answer
-  or publish/render the requested output. For bilateral trade, use the bundled
-  SQL generators instead of hand-writing schema-specific queries.
+  or render the requested output. For bilateral trade, use the bundled SQL generators instead of hand-writing schema-specific queries.
 allowed-tools: >
   mcp__plugin_factiq_factiq__*,
   mcp__factiq__*,
@@ -30,17 +29,15 @@ allowed-tools: >
 
 # FactIQ Data Tools
 
-You are the analyst. FactIQ provides authenticated **MCP tools** for the whole
-loop — discover the data (catalog, dataset/series search, read-only SQL, series
-lookup, market data, earnings-transcript and media-appearance search), then publish
-the result (`share_chart`, `share_report`). There is no server-side agent: you decompose the question, find
-the data with the MCP tools, do the math with your own tokens, then either
-answer directly in a sentence or author the output and publish it with a tool
-call.
+You are the analyst. FactIQ provides authenticated MCP tools for discovery and
+fetching: catalog, dataset and series search, read-only SQL, series lookup,
+market data, transcript and media search, satellite signals, style guides, and
+feedback. There is no server-side agent. You decompose the question, fetch the
+data, do the math, then answer or build a local output.
 
-Five output modes:
+Four output modes:
 
-- **Direct answer** — a plain-text sentence, no chart and no share link. Use
+- **Direct answer** — a plain-text sentence with no chart. Use
   when the question asks for a single current value or a simple scalar lookup
   where a chart would add nothing: "what's the US unemployment rate right now?",
   "latest CPI print", "Apple's trailing P/E". Still fetch the value with the MCP
@@ -49,38 +46,23 @@ Five output modes:
   The moment the question wants a trend, a history, a comparison across
   categories or entities, a breakdown, or explicitly asks for a chart or report,
   switch to one of the modes below.
-- **Quick chart** (`share_chart` tool + `term_chart.py`) — one focused chart
-  published to FactIQ as a share link, plus an inline terminal preview rendered
-  from the same ChartSpec. Default for a single metric over time or a
-  comparison across categories or entities. When geography is the finding this includes **maps**:
-  choropleths by country or state/province and coordinate bubbles — see
-  `references/output/chart-spec.md` (**Maps**) for the format and region-name rules
-  (the terminal preview degrades to a ranked table).
-- **Terminal chart** (`term_chart.py`) — an ANSI/ASCII preview without a share
-  link. Use only when the user explicitly asks for terminal-only, ASCII-only, or
-  local text output. See **Terminal charts** below.
-- **Detailed report** (`share_report` tool) — summary + sections of narrative
-  and charts + methodology, rendered on FactIQ's share-report page exactly like
-  the in-house agent's reports, plus inline terminal previews of its charts. For
-  broad or analytical questions. See **Detailed reports** below. Broad
-  questions in a covered domain (bilateral trade, economic policy, monetary
-  policy, fiscal revenue, business formation — see
-  `references/report-patterns/README.md`) default here unless the user
-  explicitly asks for only a quick chart. If the request is vague or
-  comprehensive, run the explorer-agent interview in
-  `references/report-patterns/interview-step.md` before data work; it clarifies
-  scope without replacing the dialectical report method.
+- **Quick chart** (`term_chart.py`) — one focused local ChartSpec plus an inline
+  terminal preview. Default for a single trend or category comparison. Maps can
+  use a ranked-table terminal fallback; see `references/output/chart-spec.md`.
+- **Detailed report** — a saved report JSON object with summary, sections,
+  charts, methodology, and terminal previews. Use for broad analytical
+  questions. Covered domains route through `references/report-patterns/README.md`.
+  If scope is unclear, use `references/report-patterns/interview-step.md` first.
 - **Bespoke local viz** (`build_viz.py`) — a self-contained HTML file you
-  author freely and save locally, not published to FactIQ. Use when the answer
+  author freely and save locally. Use when the answer
   needs something the ChartSpec can't express: a custom layout, a multi-panel
   dashboard, a force/flow/chord diagram, a novel encoding, or fine-grained
   visual control. See **Bespoke local visualizations** below.
 
 **Data in, output out:**
 
-- All discovery, fetching, **and publishing** go through the FactIQ **MCP
-  tools** (`factiq MCP`). No codebase, database, or API key is
-  needed — the coding agent calls them directly over one authenticated connection.
+- All discovery and fetching go through the FactIQ **MCP tools**. Local scripts
+  build and render the final files from the fetched results.
 - The local scripts never touch the API:
 
   ```bash
@@ -120,9 +102,8 @@ authorize the MCP server:
 - **Claude Code**: run **`/mcp`**, pick **factiq**, and complete the sign-in.
 - **Codex**: run **`codex mcp login factiq`** and complete the sign-in.
 
-The same FactIQ login works everywhere (email, Google, or passkey). Nothing to
-copy or paste, and no separate key for publishing — the same connection
-authorizes `share_chart` / `share_report`.
+The same FactIQ login works everywhere (email, Google, or passkey) and authorizes
+the data and feedback tools.
 
 **Local development.** The bundled MCP URL is
 `https://api.factiq.com/mcp`. For a local backend, edit `.mcp.json` in your
@@ -148,7 +129,7 @@ All FactIQ tools are MCP tools provided by the `factiq` MCP server.
 | `search_earnings_transcripts` (`query`, `search_target?`, `company_filter?`, `quarter_filter?`, `claim_family?`, `section?`, `detail?`, `limit?`) | Lexical (not semantic) retrieval over atomic, quote-anchored earnings-call rows — never a raw transcript dump. For a non-empty `query`, strict websearch matches rank above an automatically broadened loose partial-match OR-of-tokens tier, so lower-ranked rows may match only some terms; trigram fallback runs only when full-text search returns no rows. Inspect every row for support and retry concise company-native vocabulary (`"capital expenditure"`, `"capex"`, segment names) before concluding lexical silence. For one-call notes, first use `search_target="coverage"`, choose its exact returned `latest_period`, then browse `claims` with `query=""`, that ticker + `quarter_filter`, `detail=true`, and a deliberate limit; fetch `pressure_points` with the same ticker and quarter. The browse is capped, not a promise of a complete call. Quote only `verbatim_quote`; `canonical_statement` is normalized, and neither `analyst_hypothesized` nor `mgmt_declined_to_confirm` is a management assertion. For filed XBRL actuals use `run_sql` on `sec`; for formal targets use `sec_guidance`. Full target/filter reference and workflows: `references/report-patterns/earnings-intelligence.md`. |
 | `search_media_appearances` (`query`, `search_target?`, `company_filter?`, `person?`, `sort?`, `appearance_type?`, `claim_family?`, `date_from?`, `date_to?`, `detail?`, `limit?`) | Deterministic, lexical retrieval over precomputed public-safe paraphrases of what executives said outside earnings calls; **no serving-time model** interprets or expands the query. Strict lexical FTS runs first, loose any-term FTS only when strict finds no candidates, and trigram fallback only when both FTS stages are empty. Prefer concise topical language and retry company-native synonyms before concluding silence. Canonical targets are `search` (default claims + passages blend), `claims`, `passages`, `pressure_points`, `appearances`, and `coverage`; compatibility aliases `all`, `videos`, and `companies` map respectively to `search`, `appearances`, and `coverage` and are not recommended for new calls. `sort="relevance"` ranks lexical score before publication date; `sort="newest"` ranks publication date before lexical score. `company_filter` accepts comma-separated primary tickers; `person` is a case-insensitive speaker-name substring; `appearance_type`, `claim_family`, inclusive `date_from`/`date_to`, `detail`, and `limit` provide further narrowing. Dates are the video's publication/upload date, not necessarily its recording/event date. `claim_family` makes blended search claims-only, is invalid with `passages`, and requires matching claims for catalog targets. Structured finding rows expose `result_kind`, `canonical_paraphrase`, speaker/topic/video metadata, relevance, and a timestamped YouTube URL; `appearances` returns video-level metadata, attribution, matching-claim count, URL, and relevance; `coverage` returns company-level structured corpus counts and date/channel inventory. `detail=true` adds normalized claim/attribution fields to finding rows, but never raw transcript text or evidence spans; claim-only fields remain null on passages and detail does not change catalog rows. Never put `canonical_paraphrase` in quotation marks or claim it is verbatim; follow the timestamped source when exact wording or tone matters. Empty-query behavior and the complete workflow are in `references/report-patterns/media-intelligence.md`. |
 | `search_news` (`query?`, `tickers?`, `topic?`, `sources?`, `start_date?`, `end_date?`, `sort?`, `limit?`) | Search FactIQ's curated business-news feed — public RSS headlines and summaries from Bloomberg, the Financial Times, and the Wall Street Journal, plus India-macro (Zerodha Daily Brief, ET HealthWorld) and global-health sources (WHO, ECDC, CDC, STAT News, KFF), aggregated and processed by FactIQ so each article carries the listed companies it names (`{symbol, exchange, country}`) and an `analysis` block: searchable keywords, a geography, and an `angle` — one sentence on why the story matters to an investor. Company stories get analysis too, not just macro ones; only content with no business read at all (sports, lifestyle, celebrity) comes back with `analysis: null`. Pivot from a story into data: company stories → `get_market_data` / `search_earnings_transcripts` / `run_sql` on `sec`; macro stories → `search_series` / `run_sql`. Results are headline + short publisher summary + link out, never full articles. `query` is lexical full-text over headline+summary — start with short concrete stems (`"obesity drug"`, `"rate cut"`); if a multi-word query matches nothing in full, the tool automatically retries matching ANY of the words with rare words ranked first, flagged as `meta.query_mode: "any_term"`, so one query attempt is usually enough. `tickers` matches share classes and cross-listings automatically (GOOG also finds GOOGL-tagged articles, TSM its Taiwan listing) — pass whichever symbol you know; most macro stories name no listed company, so zero ticker matches is a normal answer. `topic` is one of markets / economics / companies / technology / politics / world / energy / health / india / opinion — combined with a `query` it is a ranking preference (matching sections rank first, but strong matches from other sections still return, since stories often run outside their obvious feed); without a query it filters to the topic's feeds. `sort` is `"latest"` (default) or `"relevance"` (needs a query); `limit` 1–50 (default 20). Coverage is recent news (most feeds start late 2025), and the feed is continuously being expanded and improved — treat it as a current-events lens, not an archive. |
-| `get_style_guides` (`guides`) | FactIQ's house-style guides (`"chart"`, `"report"`, `"sql"`, `"earnings"`, or `"all"`). Optional; this skill's `references/` already cover the **publishing** JSON formats — use these guides for extra house-style detail. Fetch `"earnings"` before writing anything built from `search_earnings_transcripts` (quoting discipline, spoken-vs-filed sourcing). |
+| `get_style_guides` (`guides`) | FactIQ house-style guides (`"chart"`, `"report"`, `"sql"`, `"earnings"`, or `"all"`). Use these for current style and sourcing rules. Fetch `"earnings"` before writing from `search_earnings_transcripts`. |
 
 Every row-returning tool (`run_sql`, `get_series`,
 `search_earnings_transcripts`, `search_media_appearances`) returns **at most 50
@@ -224,17 +205,6 @@ source independently when exact wording or tone is material. For coverage,
 theme sweeps, timelines, cross-company work, and media-vs-earnings comparison,
 read `references/report-patterns/media-intelligence.md` before searching.
 
-### Publishing
-
-| Tool | Purpose |
-|---|---|
-| `share_chart` (`chart`, `question?`) | Publish a ChartSpec object (owned by your account, editable from the UI). Returns `{share_id, share_url}`. |
-| `share_report` (`question`, `report`, `model?`) | Publish a multi-section report (`{summary, sections, …}`) as a public shared run. Returns the publish result incl. `share_url`. |
-
-Pass the spec/report as the tool argument directly — build the object in your
-context (or with the Write tool / local Python for large data arrays) and hand
-it to the tool. A validation failure comes back as a tool error naming the bad
-field; nothing is published until it validates.
 
 ### Feedback
 
@@ -252,27 +222,23 @@ with the task; never block on it.
 
 ### Terminal charts — `term_chart.py`
 
-`term_chart.py` prints local ANSI/ASCII previews from normal FactIQ chart
-objects. It never calls FactIQ. For `share_chart`, build the ChartSpec from data
-you already fetched, save it to JSON, publish it, then render it:
+`term_chart.py` prints local ANSI/ASCII previews from FactIQ chart objects. It
+never calls FactIQ. Build the ChartSpec from fetched data, save it to JSON, and
+render it:
 
 ```bash
 python3 "{plugin_root}/scripts/term_chart.py" render --spec /tmp/factiq-chart.json --width 80 --charset ascii --color auto
 ```
 
-For `share_report`, save the report object or the full `share_report` argument
-object (`{"question": "...", "report": {...}}`) to JSON, publish it, then
-render the report's charts:
+For a report, save the report object or a wrapper such as
+`{"question": "...", "report": {...}}` to JSON, then render its charts:
 
 ```bash
 python3 "{plugin_root}/scripts/term_chart.py" report --report /tmp/factiq-report.json --width 80 --charset ascii --color auto
 ```
 
-Any time you create a shared chart or shared report, return both the share link
-and the terminal preview. After `term_chart.py` renders, paste the preview
-verbatim into your reply inside a triple-backtick code block; leaving it only in
-the tool result hides it behind a collapsed block in Claude Code. Use
-terminal-only output only when the user explicitly asks for no share link.
+After `term_chart.py` renders, paste the preview verbatim into your reply inside
+a triple-backtick code block and provide the saved JSON path.
 
 Supported terminal renderers:
 
@@ -401,27 +367,16 @@ local visualizations**). Local-only; never calls the API.
    season), the fires-only `grid` mode for mapping a fire's footprint,
    cloud-cover caveats, and required attribution. Satellite data complements
    warehouse series; prefer curated series where both exist.
-7. **Answer, publish, render, or build.** Direct-answer mode: once you have the
-   value, reply with a single sentence stating the number, its period, and the
-   source — no ChartSpec, no `share_chart`, no terminal render. Quick-chart mode:
-   build a ChartSpec object
-   (see `references/output/chart-spec.md`) with wide-format data rows, save it to JSON,
-   call `share_chart`, then run `term_chart.py render`; return the `share_url`
-   and paste the terminal preview into your reply inside a triple-backtick code
-   block. Terminal-chart-only mode: build the same ChartSpec, save it to JSON,
-   run `term_chart.py render`, and paste the terminal output into your reply
-   without publishing only if the user explicitly requested no share link.
-   Report mode: build a report object (see
-   `references/output/report-spec.md` and **Detailed reports** below), save it to JSON,
-   call `share_report`, then run `term_chart.py report`; return the `share_url`
-   and paste the terminal previews into your reply inside a triple-backtick code
-   block. If a publish validation error occurs, fix and republish before
-   rendering the final terminal preview from the corrected object.
-   Bespoke-viz mode: save each fetched result to a JSON file with
-   `build_viz.py save` (no retyping), author an HTML file,
-   `build_viz.py assemble`, `build_viz.py render` to screenshot and iterate,
-   then give the user the local file path (see **Bespoke local
-   visualizations**).
+7. **Answer, render, or build.** Direct-answer mode: reply with one sentence
+   that states the number, period, and source. Quick-chart mode: build a
+   ChartSpec from wide-format data (see `references/output/chart-spec.md`), save
+   it to JSON, run `term_chart.py render`, and paste the preview into a fenced
+   code block. Report mode: build and save a report object (see
+   `references/output/report-spec.md`), run `term_chart.py report`, and return
+   the findings, local JSON path, and terminal previews. Bespoke-viz mode: save
+   each fetched result with `build_viz.py save`, author an HTML file, assemble
+   it, render screenshots, inspect and fix it, then give the user the local HTML
+   and PNG paths.
 
 ## Subagent orchestration
 
@@ -444,7 +399,7 @@ version of the question.
 Use an explorer agent for the interview step, not a research subagent. Its job
 is to clarify the decision, audience, scope, output shape, and success criteria
 and return a compact brief. It should not fetch data, choose final chart
-schemas, or publish anything. Research subagents run only after the brief and
+schemas, or assemble the final output. Research subagents run only after the brief and
 the relevant report pattern are known.
 
 **Do NOT use subagents** for quick-chart mode or single-topic questions — the
@@ -458,14 +413,13 @@ research threads. If it does, fan out.
 Spawn one Agent call per research thread. Each agent inherits the skill's
 FactIQ MCP tools, so it can discover, fetch, and compute on its own. Give each
 agent a tightly scoped prompt and tell it to return structured findings — not
-prose, not a published artifact.
+prose and not a final artifact.
 
 Agent prompt template (adapt the specifics per thread):
 
 ```
-You are a FactIQ research agent. Your job is to answer ONE sub-question and
-return structured findings. Do NOT call share_chart or share_report — just
-research and return data.
+You are a FactIQ research agent. Answer one sub-question and return structured
+findings only. Do not assemble the final chart or report.
 
 Sub-question: {sub_question}
 
@@ -519,9 +473,9 @@ the Read tool. Then embed its entire content in the assembler's prompt.
 Agent prompt template:
 
 ```
-You are a FactIQ report assembler. Build a complete report object, publish it
-with share_report, and render terminal previews for its charts. Do NOT do any
-data discovery or fetching — all data is provided below.
+You are a FactIQ report assembler. Build a complete report object, save it, and
+render terminal previews for its charts. Do not do data discovery or fetching;
+all data is provided below.
 
 USER QUESTION: {original_question}
 
@@ -541,10 +495,9 @@ Instructions:
    y_columns (for line/bar), sources, and lineage.
 5. Lineage code must be formatted multi-line SQL/Python with real newlines.
    series_refs must list every series the step used.
-6. Call share_report with question, report, and model. After it succeeds, save
-   the full share_report argument object to JSON and run:
+6. Save the full report object to JSON and run:
    `python3 {plugin_root}/scripts/term_chart.py report --report <json-file> --charset ascii --color never`
-7. Return the share_url and paste the terminal previews into the reply inside a
+7. Return the JSON path and paste the terminal previews into the reply inside a
    triple-backtick code block.
 ```
 
@@ -554,10 +507,8 @@ Launch the assembler:
 Agent(prompt="<assembler prompt with spec + findings>", label="report-assembler")
 ```
 
-The assembler has the full spec in context, so it builds the report object
-correctly on the first attempt. It calls `share_report` itself and returns
-the `share_url` plus terminal previews, which you relay to the user by pasting
-the previews inside a triple-backtick code block.
+The assembler has the full spec in context, so it builds the report object,
+saves the JSON, and returns the local path plus terminal previews.
 
 ### Example decomposition
 
@@ -573,8 +524,7 @@ After step 2 (catalog + discovery), you identify three independent threads:
 
 Spawn three research agents in parallel. When all return, spawn one assembler
 agent with the spec and all three findings blocks. The assembler builds a
-3-section report (one per thread), calls `share_report`, renders terminal
-previews, and returns both.
+3-section report, saves it, renders terminal previews, and returns both.
 
 ### When NOT to use subagents
 
@@ -582,34 +532,28 @@ previews, and returns both.
 - Single-topic questions even in report mode ("How has US unemployment evolved
   since 2020?" — one thread, no decomposition needed).
 - Bespoke local visualizations — the build_viz loop is inherently iterative and
-  does not benefit from fan-out.
 
-For these cases, do the research and publishing in the main context as usual.
+For these cases, do the research and build the output in the main context.
 
 ## Detailed reports
 
-A report is a public, fully rendered FactIQ research page: a bulleted summary
-up top, then sections that pair narrative with charts, then methodology notes.
-You author the whole thing — every chart's data rows, every narrative claim —
-from data you actually fetched in this session. The JSON format, per-chart
-fields, and a worked example live in `references/output/report-spec.md`. For reliable publishing, use a dedicated report-assembler subagent with the spec loaded in its prompt — see **Subagent orchestration**.
+A report is a structured local research output: a bulleted summary, sections
+that pair narrative with charts, and methodology notes. Author every chart row
+and narrative claim from data fetched in this session. The JSON format and a
+worked example are in `references/output/report-spec.md`. For reliable assembly,
+load that full file into a dedicated report-assembler subagent.
 
 Ground rules:
 
-- **2–5 sections, 1–2 charts each** is the sweet spot (server caps: 12
+- **2–5 sections, 1–2 charts each** is the normal size. The format allows up to 12
   sections, 16 charts). Each section should make one claim its charts prove.
 - **Chart titles state the finding** ("Health care added 652k jobs in 2024 —
   triple tech's losses"), not the topic ("Jobs by sector").
-- **Narratives are plain text** — markdown is not rendered on the report page,
-  so `**bold**` shows up as literal asterisks.
-- **Cite sources and lineage.** Every chart should carry `sources` (the
-  datasets behind it) and `lineage` (the SQL/computation steps you actually
-  ran). Charts without lineage get a generic "uploaded data" stub — fine, but
-  real lineage makes the "How we built this" panel meaningful. Lineage `code`
-  renders verbatim in a code block, so write it as formatted multi-line
-  SQL/Python — never collapsed onto one line — and list **every** series the
-  step touched in `series_refs`, not a single representative one.
-- **Don't pad.** If the data only supports one chart, publish a quick chart
+- **Narratives are plain text.** Keep them short and direct.
+- **Cite sources and lineage.** Every chart must identify the datasets and the
+  exact SQL or computation used. Format SQL and Python with real newlines. List
+  every series used in `series_refs`.
+- **Do not pad.** If the data only supports one chart, build a quick chart
   instead of inflating a report.
 - **Broad analytical questions get the dialectic.** Follow the
   thesis → antithesis → synthesis method in
@@ -620,21 +564,16 @@ Ground rules:
   playbook the README routes to — do not reduce them to the easiest single
   chart.
 
-The `share_report` tool validates the report against FactIQ's real chart
-schemas server-side, stores it as a completed public run, and returns the
-`share_url`. After it succeeds, render the report object with
-`term_chart.py report`, then paste the previews into your reply so the user gets
-both the link and visible terminal previews.
-The report appears in your FactIQ history and can be forked by anyone who opens
-the share link.
+Check the report object against `references/output/report-spec.md`, save it to
+JSON, and render it with `term_chart.py report`. Return the report findings, the
+local JSON path, and visible terminal previews.
 
 ## Bespoke local visualizations
 
-When the answer wants something the published ChartSpec can't express — a
-custom layout, a dashboard of several panels, a force/flow/chord diagram, an
-annotated narrative, a novel encoding, or just fine visual control — build it
-yourself as a self-contained local HTML file. There is no spec and no fixed
-chart-type list: you author the HTML/JS (ECharts, D3, Canvas, SVG, WebGL),
+When the answer needs a custom layout, a dashboard of several panels, a
+force/flow/chord diagram, an annotated narrative, a novel encoding, or fine
+visual control, build a self-contained local HTML file.
+There is no fixed chart-type list: author the HTML/JS with ECharts, D3, Canvas, SVG, or WebGL,
 inject the data you already fetched, then render and iterate. Read
 `references/output/viz-guide.md` before starting — it covers technique selection, the
 data contract, and the legibility checklist.
@@ -711,14 +650,11 @@ payload from the transcript so you never retype the rows.
 
 ## Errors and limits
 
-- **MCP tool unavailable / auth error** — the FactIQ MCP isn't connected. Tell
+- **MCP tool unavailable / auth error** — the FactIQ MCP is not connected. Tell
   the user to authorize it (Claude Code: `/mcp` → factiq; Codex:
-  `codex mcp login factiq`). The same connection authorizes both the data tools
-  and `share_chart` / `share_report`, so this fixes publishing failures too.
+  `codex mcp login factiq`).
 - **429** — either the 1 request/second rate limit or the monthly tool-call
-  quota (the error says when it resets). Note that publishing counts against the
-  same monthly tool quota as the data tools. Don't burn calls re-fetching data
-  you already have.
+  quota. The error states when it resets. Do not re-fetch data you already have.
 - **403** — that schema is admin-restricted for this account; drop it.
 - **SQL errors** come back in the tool result as an `error` (syntax errors,
   timeouts, bad column names). Revise the query and rerun.
@@ -731,10 +667,6 @@ payload from the transcript so you never retype the rows.
   (see the pitfall in `references/data/sql-guide.md`). For `eu_comext_*`, do
   not retry a dimension scan; use `eu_comext_lookup.product_codes` and exact
   IDs as described in the Comext section of that guide.
-- **Publishing validation error** — `share_chart` / `share_report` validate the
-  payload against FactIQ's real chart schemas and return a tool error naming the
-  failing field paths (e.g. `sections[1].charts[0].x_column`). Fix the named
-  fields and call the tool again; nothing is published until it validates.
 - **Anything that looks broken on FactIQ's side** — a value that contradicts
   the official source, wrong units, missing periods, an advertised dataset
   that returns nothing, a tool that keeps erroring — report it with
@@ -755,12 +687,11 @@ payload from the transcript so you never retype the rows.
   fires-only `grid` footprint mode, cloud/quality caveats, attribution
   requirements.
 
-**`references/output/`** — the publishing formats:
+**`references/output/`** — local output formats:
 
-- `chart-spec.md` — ChartSpec format, chart-type selection, a worked
-  `share_chart` example.
-- `report-spec.md` — report JSON format for `share_report`: sections,
-  per-chart fields, sources/lineage authoring, limits, a worked example.
+- `chart-spec.md` — ChartSpec format, chart-type selection, terminal rendering, and a worked example.
+- `report-spec.md` — report JSON format: sections, per-chart fields,
+  sources, lineage, limits, and a worked example.
 - `viz-guide.md` — bespoke local HTML visualizations with `build_viz.py`: the
   assemble/render loop, the `DATA` contract, technique selection
   (ECharts/D3/Canvas/WebGL), a legibility checklist, starter recipes.

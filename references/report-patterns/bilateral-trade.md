@@ -3,8 +3,8 @@
 Use this guide for broad country-pair merchandise trade questions, especially
 phrases like "latest trend in trade between A and B", "what is driving trade",
 "trade balance between A and B", or "compare exports and imports between A and
-B". Unless the user explicitly asks for only a quick chart, treat these as
-report-style requests and publish a compact `share_report`.
+B". Unless the user explicitly asks for one quick chart, treat these as
+report-style requests and build a compact local report.
 
 Do not use this file alone for broad "trade policy" or "economic policy"
 questions. Those questions need the wider concept checklist in
