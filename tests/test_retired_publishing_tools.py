@@ -6,7 +6,12 @@ RETIRED_NAMES = {"share_chart", "share_report", "list_my_artifacts"}
 
 
 def test_public_plugin_does_not_reference_retired_publishing_tools():
-    paths = [ROOT / "README.md"]
+    paths = [
+        ROOT / "README.md",
+        ROOT / ".codex-plugin/plugin.json",
+        ROOT / ".claude-plugin/plugin.json",
+        ROOT / ".claude-plugin/marketplace.json",
+    ]
     for folder in ("commands", "skills", "references", "scripts"):
         paths.extend((ROOT / folder).rglob("*.md"))
         paths.extend((ROOT / folder).rglob("*.py"))

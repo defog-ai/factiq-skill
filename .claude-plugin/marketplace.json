@@ -7,7 +7,7 @@
     {
       "name": "factiq",
       "source": "./",
-      "description": "Answer economic and financial data questions with real data from FactIQ — official statistics, market data, earnings-call transcripts, executive media appearances, and a curated business-news feed — publish shareable charts and reports, render terminal previews, or build bespoke local HTML visualizations."
+      "description": "Answer economic and financial data questions with real data from FactIQ — official statistics, market data, earnings-call transcripts, executive media appearances, and a curated business-news feed — return sourced answers, terminal previews, report JSON, or bespoke local HTML visualizations."
     }
   ]
 }
