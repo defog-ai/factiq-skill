@@ -112,6 +112,7 @@ The `uk` schema holds six datasets (filter on `dataset_code`):
 | `worldbank` | World Bank | Development and macro indicators by country |
 | `singstat` | Singapore Department of Statistics | Singapore national statistics |
 | `portwatch` | IMF PortWatch (satellite-AIS) | Daily shipping: transit calls + trade capacity for 28 chokepoints (Suez, Hormuz, Malacca…), port calls + import/export volume estimates for 196 countries and 2,065 ports, 2019→, refreshed weekly (data runs a few days to a week behind) |
+| `nasa_fires` | NASA FIRMS (VIIRS 375 m) | Every active-fire detection worldwide since 2012-01-20, one row per satellite pixel, plus pre-computed daily totals per country, per state, and per 0.1° cell. Refreshed daily. **Shaped unlike every other schema — read "The nasa_fires schema" below before writing SQL.** Most fire questions need no SQL at all: use `get_geo_data` (see `references/data/satellite.md`) |
 | `satellite` | NASA / CNES satellite-derived | Monthly nighttime lights by country + state (economic-activity proxy, Asia focus, 2019→); lake & reservoir water levels from radar altimetry (650 water bodies incl. 88 Chinese, 15 major Indian reservoirs, 1990s→, per-overpass). Water-level stations come in two grades (`grade` dimension): `operational` updates ~weekly; `research` stations are frozen scientific archives (many end 2020-22) — always check the series `end_time` before presenting a level as current, and filter to operational for live readings |
 
 ## IMF past releases
@@ -144,6 +145,47 @@ moved between releases.
   a long history. Query `dimension_type = 'release'` to see which ones are
   actually there before promising a comparison.
 
+## The nasa_fires schema
+
+A fire detection is one satellite pixel that was burning at one moment. It
+belongs to no series, so **this schema has no `series` table and no
+`data_points` table** — the usual discovery method does not apply. Five tables:
+
+- **`detections`** — one row per detection since 2012-01-20: `acq_ts` (UTC
+  timestamp of the overpass), `latitude`, `longitude`, `frp` (fire radiative
+  power in megawatts — the heat), `bright_ti4`, `bright_ti5`, `country_id`,
+  `admin1_id`, `type`, `confidence` (`l`/`n`/`h`), `daynight` (`D`/`N`),
+  `quality` (`S` final, `N` provisional).
+- **`region_daily`** — daily `detections` and `frp_sum` per country and state.
+  `admin1_id = 0` is the country total, stored as a row **alongside** the state
+  rows — so filter to `admin1_id = 0` for countries or `admin1_id > 0` for
+  states. Summing both double-counts.
+- **`grid_daily`** — the same daily totals per 0.1° cell. `cell_lat` and
+  `cell_lon` are `floor(degrees * 10)`, so cell 302 covers 30.2 to 30.3.
+- **`countries`** and **`admin1`** — id-to-name lookups, joined on
+  `country_id` / `admin1_id`.
+
+**Read `type` before counting anything**: `0` vegetation fire, `1` volcano,
+`2` gas flare or other industrial heat, `3` offshore, `-1` NASA has not
+classified it yet — which is every detection from the last few weeks.
+`type IN (0, -1)` is wildfire and crop burning; `type = 2` is flaring. A bare
+`type = 0` silently drops the newest data.
+
+A detection is not a fire: one fire produces many detections across many
+overpasses, and a fire that burns out between overpasses produces none. Count
+rows for extent, sum `frp` for intensity.
+
+`run_sql` accepts a `page` argument **on this schema only** — 50 rows at a
+time, with `has_more` telling you whether to ask for the next one. Give the
+query an `ORDER BY` or the pages won't line up. Totals still belong in SQL;
+never page through thousands of detections to add them up yourself.
+
+Prefer `get_geo_data` (`references/data/satellite.md`) — it answers monthly or
+daily counts for a region, one window compared across every year since 2012, a
+map grid, and the raw points in a small box, with no SQL at all. Come here for
+the shapes it doesn't cover: ranking many countries at once, joining fires to
+another dataset, or splitting day passes from night passes.
+
 ## Picking schemas
 
 - US labor/inflation → `bls` (plus `oews` for occupation-level wages)
@@ -164,6 +206,9 @@ moved between releases.
   irrigation, drought) → `satellite` schema; for on-demand fires/NO2/SO2/CO/
   aerosol/rainfall/NDVI over arbitrary regions → the `get_geo_data` tool
   instead (see `references/data/satellite.md`)
+- Crop burning, wildfires, gas flaring → `get_geo_data` first; drop to the
+  `nasa_fires` schema only for shapes the tool doesn't cover (see "The
+  nasa_fires schema" above)
 - Company-specific: consolidated quotes/fundamentals → `get_market_data` tool (not SQL); segment/product/geography detail, forward guidance, or operating KPIs (ARR, RevPAR, ...) → `sec` schema via `run_sql`; what management said live on a call → `search_earnings_transcripts` tool (not SQL)
 - What executives said in podcasts, television interviews, and conferences
   outside earnings calls → `search_media_appearances` (not SQL); follow `references/report-patterns/media-intelligence.md`

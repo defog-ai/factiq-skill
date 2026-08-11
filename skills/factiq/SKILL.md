@@ -114,10 +114,10 @@ All FactIQ tools are MCP tools provided by the `factiq` MCP server.
 | `search_datasets` (`query`, `schemas?`, `limit?`) | Keyword (not semantic) ranking of datasets across all schemas. **The first discovery step** — find the right `schema` + `dataset_code`. |
 | `describe_dataset` (`schema`, `dataset_code`) | Full metadata for one dataset: topic, methodology, release dates, base-change notice, dimensions, example series. Call after `search_datasets`. |
 | `search_series` (`schema`, `terms`, `limit?`, `include_compound?`) | Series-level title-substring search within one schema (`terms` is a list — prefer short stems). Includes `COMPOUND::` series. |
-| `run_sql` (`schema`, `sql`, `question?`, `explore?`, `auto_retry?`) | Read-only SELECT against one schema. The power tool for joins, pivots, aggregation. |
+| `run_sql` (`schema`, `sql`, `question?`, `explore?`, `auto_retry?`, `page?`) | Read-only SELECT against one schema. The power tool for joins, pivots, aggregation. `page` works on the `nasa_fires` schema only, where individual rows are the answer; everywhere else, aggregate. |
 | `get_series` (`schema`, `series_id`, `from_year?`, `to_year?`) | Fetch one series — timeseries, tabular, or `COMPOUND::` ids all work. |
 | `get_market_data` (`function`, `symbol?`, `interval?`, `outputsize?`) | Quotes, daily/weekly/monthly series, fundamentals (OVERVIEW, INCOME_STATEMENT, EARNINGS), FX, commodities (WTI, BRENT, GOLD), SYMBOL_SEARCH. |
-| `get_geo_data` (`dataset`, `region`, `start_date`, `end_date`, `aggregation?`) | Satellite-derived signals, fetched live rather than stored as series: `fires_viirs` (crop burning/wildfires, ~3h lag; `aggregation="grid"` maps the fire's footprint, `aggregation="points"` returns exact detection coordinates when the window has ≤500), `no2_tropomi` / `so2_tropomi` / `co_tropomi` (industrial, coal/smelting, and combustion activity), `aerosol_index_tropomi` (smoke/dust/haze), `ndvi_s2` (crop condition) — these five also accept `aggregation="grid"` for a cell-by-cell spatial snapshot — `precip_chirps` (0.05° gauge-calibrated rainfall within 50S-50N), `precip_imerg` (0.1° global rainfall), `temperature_power`, `soil_moisture_power` — aggregated over a country, state (`"India/Punjab"`), or bbox. **Read `references/data/satellite.md` before first use** — it covers windows (max 50 intervals; grid/points max 92 days), the `valid_obs_share` rule, and attribution. |
+| `get_geo_data` (`dataset`, `region`, `start_date`, `end_date`, `aggregation?`, `resolution?`, `include_flares?`) | Satellite-derived signals: `fires_viirs` (crop burning/wildfires; every detection since 2012 is held in FactIQ's own database, so calls answer in under a second — `aggregation="seasons"` compares the same calendar window in every year since 2012 in one call, `"grid"` maps the footprint at a cell size you pick with `resolution`, `"points"` returns exact detection coordinates), `no2_tropomi` / `so2_tropomi` / `co_tropomi` (industrial, coal/smelting, and combustion activity), `aerosol_index_tropomi` (smoke/dust/haze), `ndvi_s2` (crop condition) — these five also accept `aggregation="grid"` for a cell-by-cell spatial snapshot — `precip_chirps` (0.05° gauge-calibrated rainfall within 50S-50N), `precip_imerg` (0.1° global rainfall), `temperature_power`, `soil_moisture_power` — aggregated over a country, state (`"India/Punjab"`), or bbox. `resolution` and `include_flares` apply to `fires_viirs` only; gas flares and other permanent industrial heat are excluded unless you ask for them. **Read `references/data/satellite.md` before first use** — it covers windows (50 intervals, 200 for fires; grid/points 92 days, 366 for fires), the `valid_obs_share` rule, and attribution. For fire questions this tool does not cover, query the `nasa_fires` SQL schema (`references/data/schemas.md`). |
 | `search_earnings_transcripts` (`query`, `search_target?`, `company_filter?`, `quarter_filter?`, `claim_family?`, `section?`, `detail?`, `limit?`) | Lexical (not semantic) retrieval over atomic, quote-anchored earnings-call rows — never a raw transcript dump. For a non-empty `query`, strict websearch matches rank above an automatically broadened loose partial-match OR-of-tokens tier, so lower-ranked rows may match only some terms; trigram fallback runs only when full-text search returns no rows. Inspect every row for support and retry concise company-native vocabulary (`"capital expenditure"`, `"capex"`, segment names) before concluding lexical silence. For one-call notes, first use `search_target="coverage"`, choose its exact returned `latest_period`, then browse `claims` with `query=""`, that ticker + `quarter_filter`, `detail=true`, and a deliberate limit; fetch `pressure_points` with the same ticker and quarter. The browse is capped, not a promise of a complete call. Quote only `verbatim_quote`; `canonical_statement` is normalized, and neither `analyst_hypothesized` nor `mgmt_declined_to_confirm` is a management assertion. For filed XBRL actuals use `run_sql` on `sec`; for formal targets use `sec_guidance`. Full target/filter reference and workflows: `references/report-patterns/earnings-intelligence.md`. |
 | `search_media_appearances` (`query`, `search_target?`, `company_filter?`, `person?`, `sort?`, `appearance_type?`, `claim_family?`, `date_from?`, `date_to?`, `detail?`, `limit?`) | Deterministic, lexical retrieval over precomputed public-safe paraphrases of what executives said outside earnings calls; **no serving-time model** interprets or expands the query. Strict lexical FTS runs first, loose any-term FTS only when strict finds no candidates, and trigram fallback only when both FTS stages are empty. Prefer concise topical language and retry company-native synonyms before concluding silence. Canonical targets are `search` (default claims + passages blend), `claims`, `passages`, `pressure_points`, `appearances`, and `coverage`; compatibility aliases `all`, `videos`, and `companies` map respectively to `search`, `appearances`, and `coverage` and are not recommended for new calls. `sort="relevance"` ranks lexical score before publication date; `sort="newest"` ranks publication date before lexical score. `company_filter` accepts comma-separated primary tickers; `person` is a case-insensitive speaker-name substring; `appearance_type`, `claim_family`, inclusive `date_from`/`date_to`, `detail`, and `limit` provide further narrowing. Dates are the video's publication/upload date, not necessarily its recording/event date. `claim_family` makes blended search claims-only, is invalid with `passages`, and requires matching claims for catalog targets. Structured finding rows expose `result_kind`, `canonical_paraphrase`, speaker/topic/video metadata, relevance, and a timestamped YouTube URL; `appearances` returns video-level metadata, attribution, matching-claim count, URL, and relevance; `coverage` returns company-level structured corpus counts and date/channel inventory. `detail=true` adds normalized claim/attribution fields to finding rows, but never raw transcript text or evidence spans; claim-only fields remain null on passages and detail does not change catalog rows. Never put `canonical_paraphrase` in quotation marks or claim it is verbatim; follow the timestamped source when exact wording or tone matters. Empty-query behavior and the complete workflow are in `references/report-patterns/media-intelligence.md`. |
 | `search_news` (`query?`, `tickers?`, `topic?`, `sources?`, `start_date?`, `end_date?`, `sort?`, `limit?`) | Search FactIQ's curated business-news feed — public RSS headlines and summaries from Bloomberg, the Financial Times, and the Wall Street Journal, plus India-macro (Zerodha Daily Brief, ET HealthWorld) and global-health sources (WHO, ECDC, CDC, STAT News, KFF), aggregated and processed by FactIQ so each article carries the listed companies it names (`{symbol, exchange, country}`) and an `analysis` block: searchable keywords, a geography, and an `angle` — one sentence on why the story matters to an investor. Company stories get analysis too, not just macro ones; only content with no business read at all (sports, lifestyle, celebrity) comes back with `analysis: null`. Pivot from a story into data: company stories → `get_market_data` / `search_earnings_transcripts` / `run_sql` on `sec`; macro stories → `search_series` / `run_sql`. Results are headline + short publisher summary + link out, never full articles. `query` is lexical full-text over headline+summary — start with short concrete stems (`"obesity drug"`, `"rate cut"`); if a multi-word query matches nothing in full, the tool automatically retries matching ANY of the words with rare words ranked first, flagged as `meta.query_mode: "any_term"`, so one query attempt is usually enough. `tickers` matches share classes and cross-listings automatically (GOOG also finds GOOGL-tagged articles, TSM its Taiwan listing) — pass whichever symbol you know; most macro stories name no listed company, so zero ticker matches is a normal answer. `topic` is one of markets / economics / companies / technology / politics / world / energy / health / india / opinion — combined with a `query` it is a ranking preference (matching sections rank first, but strong matches from other sections still return, since stories often run outside their obvious feed); without a query it filters to the topic's feeds. `sort` is `"latest"` (default) or `"relevance"` (needs a query); `limit` 1–50 (default 20). Coverage is recent news (most feeds start late 2025), and the feed is continuously being expanded and improved — treat it as a current-events lens, not an archive. |
@@ -294,7 +294,10 @@ local visualizations**). Local-only; never calls the API.
    chokepoints, ports, country trade estimates) and `satellite` (nighttime
    lights by state, lake/reservoir water levels) — see
    `references/data/schemas.md` for routing and
-   `references/data/satellite.md` for the on-demand geo tool.
+   `references/data/satellite.md` for the on-demand geo tool. Fire detections
+   live in a third schema, `nasa_fires`, which holds raw detections rather than
+   series and is shaped unlike the others — read its section in
+   `references/data/schemas.md` before writing SQL against it.
 
    Eurostat Comext is the exception: country schemas contain millions of
    series, so do not explore their `series` or `dimensions` tables by text or
@@ -355,11 +358,13 @@ local visualizations**). Local-only; never calls the API.
    monsoon rainfall, heatwaves, or agricultural drought — where satellite
    observation runs ahead of official statistics — use `get_geo_data`. Read
    `references/data/satellite.md` first: it covers the ten datasets, region
-   syntax, the 50-interval window budget (seasonal comparisons = one call per
-   season), the `grid` mode for mapping where a signal sits (fires, NDVI,
-   air quality), the fires-only `points` mode for exact detection
-   coordinates, cloud-cover caveats, and required attribution. Satellite data complements
-   warehouse series; prefer curated series where both exist.
+   syntax, the window budget (50 intervals, 200 for fires), the `grid` mode for
+   mapping where a signal sits (fires, NDVI, air quality), the fires-only
+   `points`, `seasons`, `resolution`, and `include_flares` controls, cloud-cover
+   caveats, and required attribution. Fires are the one dataset FactIQ stores
+   itself — every detection since 2012 — so a fourteen-year seasonal comparison
+   is one call. Satellite data complements warehouse series; prefer curated
+   series where both exist.
 7. **Answer, render, or build.** Direct-answer mode: reply with one sentence
    that states the number, period, and source. Quick-chart mode: build a
    ChartSpec from wide-format data (see `references/output/chart-spec.md`), save
@@ -626,6 +631,12 @@ rows**, and there is no "give me everything" option — by design. The cap keeps
 results context-sized, so you do **not** stage data to disk to protect your
 context; you take the tool result directly.
 
+There is one exception. In the `nasa_fires` schema a row is a single satellite
+fire detection, which belongs to no series and carries no value to average, so
+the rows themselves can be the answer. There `run_sql` accepts `page` and walks
+the result 50 rows at a time. Give the query an `ORDER BY`, or the pages will
+not line up. No other schema accepts `page`.
+
 When a result comes back `"truncated": true`, there is more data and your move
 is to **aggregate or compute it in SQL**, not to try to fetch the raw rows:
 
@@ -677,7 +688,8 @@ payload from the transcript so you never retype the rows.
   literals, national vs sub-national, pivots, tabular data).
 - `satellite.md` — the `get_geo_data` satellite tool: datasets and their
   economic reading, region syntax and coverage, window budgeting, the
-  spatial `grid` and fires-only `points` modes, cloud/quality caveats,
+  spatial `grid` mode, the fires-only `points` and `seasons` modes and the
+  `resolution` / `include_flares` controls, cloud/quality caveats,
   attribution requirements.
 
 **`references/output/`** — local output formats:
