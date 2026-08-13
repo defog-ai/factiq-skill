@@ -36,7 +36,7 @@ evidence management did not discuss a topic.
 
 | `search_target` | What `query` does | Applicable filters and returned detail |
 |---|---|---|
-| `claims` | Ranked lexical search; `query=""` browses rows | `company_filter`, exact `quarter_filter`, `claim_family` (primary or secondary family), `section`, `detail`, and `limit`. `detail=true` adds `structured_fields`, secondary families, period/horizon, conviction, denominator, and quantified/falsifiable flags. |
+| `claims` | Ranked lexical search; `query=""` browses rows | `company_filter`, exact `quarter_filter`, `claim_family` (primary or secondary family), `section`, `detail`, and `limit`. `detail=true` adds `structured_fields`, secondary families, period/horizon, conviction, denominator, and the `falsifiable` flag. |
 | `pressure_points` | Ranked lexical search; `query=""` browses Q&A pressure rows | `company_filter`, exact `quarter_filter`, `claim_family` (the linked family), `detail`, and `limit`. `section` is ignored because every row is Q&A. `detail=true` adds `tone_note`. |
 | `disclosure_profile` | No text search: direct company lookup | Uses the first ticker in `company_filter`, or `query` as the ticker. It is accumulated at company level. `quarter_filter` is ignored; `claim_family`, `section`, `detail`, and `limit` are also ignored. |
 | `coverage` | No theme search: corpus inventory | `company_filter` and `limit` apply. `query`, `quarter_filter`, `claim_family`, `section`, and `detail` do not narrow the inventory. |
