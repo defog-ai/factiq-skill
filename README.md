@@ -1,8 +1,8 @@
 # FactIQ - a real-time finance and economy database for AI Agents
 
-Turn your agent into a finance and economy analyst. This plugin for
-[Claude Code](https://code.claude.com/docs/en/plugins) and
-[Codex](https://github.com/openai/codex) gives the agent direct access to
+Turn your agent into a finance and economy analyst. This plugin for Claude
+(web, desktop, and Cowork), ChatGPT Desktop, Claude Code, and Codex gives the
+agent direct access to
 FactIQ's warehouse of official statistics — SEC filings, US, China, India, Korea, IMF,
 World Bank, and more — plus live market data, earnings-call transcripts,
 executive media appearances, and satellite-derived data (fire detections,
@@ -20,6 +20,35 @@ teaches the agent a whole class of questions — see
 [Contributing](#contributing).
 
 ## Install
+
+FactIQ supports four client paths. The website guides are canonical for app
+setup and plan requirements, which can change faster than this repository:
+
+| Client | Supported surfaces | Setup guide |
+|---|---|---|
+| Claude | Web, desktop, and Cowork | [factiq.com/claude](https://www.factiq.com/claude) |
+| ChatGPT | Desktop app (including Codex in the app) | [factiq.com/chatgpt](https://www.factiq.com/chatgpt) |
+| Claude Code | CLI, desktop app, and IDE extensions | [factiq.com/claude-code](https://www.factiq.com/claude-code) |
+| Codex | CLI | [factiq.com/codex](https://www.factiq.com/codex) |
+
+### Claude (web, desktop, and Cowork)
+
+For the best experience, use Cowork. In Claude, open **Customize → Plugins**,
+add `defog-ai/factiq-plugin` as a personal marketplace, install FactIQ, and
+complete the browser sign-in. The full plugin requires a paid Claude plan;
+Claude Free can use the connector-only setup. See the
+[Claude guide](https://www.factiq.com/claude) for the current steps,
+organization-policy notes, and connector-only alternative.
+
+### ChatGPT Desktop
+
+In the ChatGPT desktop app, open **Plugins**, add
+`defog-ai/factiq-plugin` as a marketplace, install FactIQ from the Personal
+tab, and complete the browser sign-in. Custom plugins currently require a
+ChatGPT Pro, Business, Enterprise, or Edu plan. This installation also covers
+Codex inside the ChatGPT app; Codex CLI uses the separate setup below. See the
+[ChatGPT guide](https://www.factiq.com/chatgpt) for the current plan matrix and
+troubleshooting steps.
 
 ### Claude Code
 
@@ -125,8 +154,8 @@ Once installed and authenticated, ask a question:
 The agent finds the relevant series, runs the SQL, and replies with a
 shareable factiq.com chart link — or a terminal chart or full report,
 depending on what you ask for. You don't need the slash command: any
-economic or financial data question in a normal Claude Code or Codex
-conversation auto-invokes the skill.
+economic or financial data question in any supported client auto-invokes the
+skill.
 
 For an earnings question such as "What did Micron management say on its latest
 call?", the skill checks live transcript coverage first, pins the exact fiscal
@@ -150,6 +179,7 @@ authors a local output. Data access uses the **FactIQ MCP server** bundled in
 
 ```
 ┌─────────────────────────────┐
+│  Claude / ChatGPT /         │
 │  Claude Code / Codex        │
 │  + factiq skill (SKILL.md)  │      the agent orchestrates everything
 └──────────────┬──────────────┘
@@ -205,7 +235,7 @@ returns the live, authoritative version.
 Where the behavior lives — the files contributors will touch:
 
 - `skills/factiq/SKILL.md` — the skill definition and single source of truth
-  for the workflow. Auto-discovered by both Claude Code and Codex from the
+  for the workflow. Auto-discovered by supported plugin clients from the
   `skills/` directory
 - `references/data/` — the data layer: SQL idioms (`sql-guide.md`) and the
   dataset schema overview (`schemas.md`)
@@ -223,16 +253,17 @@ Where the behavior lives — the files contributors will touch:
   FactIQ ChartSpec and report JSON objects. It supports bar, simple line, and
   table fallback renderers
 - `scripts/build_viz.py` — local-only tool that assembles fetched data into a
-  self-contained HTML viz and screenshots it headless for iteration; usage in
-  [`references/output/viz-guide.md`](references/output/viz-guide.md)
+  self-contained HTML viz and screenshots it headless for iteration. It never
+  installs Playwright or Chromium unless `--install-deps` is explicitly
+  passed; usage in [`references/output/viz-guide.md`](references/output/viz-guide.md)
 - `assets/viz-shell.html` — starting-point shell for bespoke visualizations
 
 Plugin plumbing — you shouldn't need to touch these:
 
 - `.mcp.json` — declares the bundled FactIQ MCP server (Streamable HTTP,
   OAuth). Read by both Claude Code and Codex plugin loaders
-- `.claude-plugin/` — Claude Code plugin + marketplace manifests
-- `.codex-plugin/` — Codex plugin manifest
+- `.claude-plugin/` — Claude and Claude Code plugin + marketplace manifests
+- `.codex-plugin/` — ChatGPT and Codex plugin manifest
 - `.agents/plugins/marketplace.json` — Codex marketplace entry for
   `codex plugin marketplace add defog-ai/factiq-plugin`
 
