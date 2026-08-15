@@ -21,11 +21,17 @@ caller's working directory:
 |---|---|
 | `save --out F.json [--tool run_sql] [--match STR] [--index N] [--list]` | Copy a tool result's **raw JSON straight from the harness transcript** to `F.json` — the shell does the byte copy, you never retype the data. Feeds `assemble --data`. Stdlib only. See **Saving data without retyping** below. |
 | `assemble --template T --data k1=f1.json k2=f2.json … --out O.html [--open]` | Inject on-disk JSON into your HTML at the `__FACTIQ_DATA__` marker; write one portable file. Stdlib only. Pass **all** key=path pairs after the single `--data` flag (or repeat the flag — both work). |
-| `render H.html [--out P.png] [--width] [--height] [--full-page] [--selector CSS] [--wait MS]` | Screenshot the file in headless Chromium and report JS/console errors + failed requests. Installs Playwright + Chromium into `~/.factiq/viz-venv` on first run. |
+| `render H.html [--out P.png] [--width] [--height] [--full-page] [--selector CSS] [--wait MS] [--install-deps]` | Screenshot the file in headless Chromium and report JS/console errors + failed requests. Does not install anything by default. `--install-deps` explicitly allows installation of Playwright + Chromium into `~/.factiq/viz-venv`. |
 
 `render` exits **5** when the page logged a JS error, an uncaught exception,
 or a failed asset request — treat a non-zero exit as "the viz is broken, read
 stderr," not "minor warning."
+
+If Playwright or Chromium is unavailable, `render` exits **6** without
+installing anything. Never add `--install-deps` unless the user explicitly
+authorizes the local dependency download. Without approval, keep the assembled
+HTML, render the same findings as a terminal chart or table with
+`term_chart.py`, and disclose that the HTML was not screenshot-verified.
 
 ## The workflow
 
@@ -58,6 +64,10 @@ stderr," not "minor warning."
    ```bash
    python3 "{plugin_root}/scripts/build_viz.py" render /tmp/out.html --out /tmp/out.png
    ```
+   On a machine without the rendering dependencies, ask before installing
+   them. Only after explicit approval, rerun the command with
+   `--install-deps`; otherwise use the terminal/table fallback described
+   above.
    If exit code is 5, read the errors on stderr and fix them first — a JS
    error usually means a blank page. Then inspect the screenshot against the
    legibility checklist below and iterate: edit → assemble → render → look,

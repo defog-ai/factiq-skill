@@ -13,8 +13,9 @@ Two subcommands:
   assemble  — inject on-disk JSON into an HTML template at the data marker,
               producing one portable, self-contained .html. Stdlib only.
   render    — open an HTML file in headless Chromium, write a PNG, and report
-              any JS/console errors and failed requests. Needs Playwright;
-              installs the package and Chromium on first run.
+              any JS/console errors and failed requests. Needs Playwright and
+              Chromium; installs them only with the explicit --install-deps
+              opt-in flag.
 
 Data contract: the template must contain the marker token __FACTIQ_DATA__
 inside a JSON script tag (see assets/viz-shell.html). After assembly the page
@@ -414,15 +415,25 @@ def _venv_has_playwright(venv_py: str) -> bool:
     )
 
 
-def _ensure_render_env():
+def _missing_render_dependency(name: str) -> None:
+    fail(
+        f"{name} is required for headless rendering, but FactIQ did not install "
+        "anything. After the user explicitly approves the local dependency "
+        "download, rerun the render command with --install-deps. Without "
+        "approval, keep the HTML output and use the terminal/table fallback.",
+        6,
+    )
+
+
+def _ensure_render_env(install_deps: bool):
     """Return sync_playwright, or re-exec this script under a dedicated venv.
 
     The interpreter that launched us may be externally managed (Homebrew, uv,
-    distro python) where `pip install` is refused. Rather than touch it, we
-    keep a private venv at ~/.factiq/viz-venv, install Playwright there, and
-    re-exec the same command under that venv's python. Chromium itself is
-    installed lazily by the launch fallback in cmd_render, now running under
-    the venv.
+    distro python) where `pip install` is refused. When dependency installation
+    was explicitly opted into, keep a private venv at ~/.factiq/viz-venv,
+    install Playwright there, and re-exec the same command under that venv's
+    python. Chromium itself is installed by the launch fallback in cmd_render,
+    also only after that opt-in.
     """
     try:
         from playwright.sync_api import sync_playwright  # noqa: F401
@@ -435,6 +446,14 @@ def _ensure_render_env():
         fail("Playwright is unavailable even after venv setup.", 6)
 
     venv_py = _venv_python(VENV_DIR)
+    if os.path.exists(venv_py) and _venv_has_playwright(venv_py):
+        env = dict(os.environ, FACTIQ_VIZ_REEXEC="1")
+        os.execve(venv_py, [venv_py, os.path.abspath(__file__), *sys.argv[1:]], env)
+        return None
+
+    if not install_deps:
+        _missing_render_dependency("Playwright")
+
     # Prefer uv when present: the interpreter that launched us is often a
     # uv-managed build with no ensurepip, so stdlib `venv --with-pip` aborts.
     # uv creates the venv and installs into it without needing pip bootstrapped.
@@ -492,25 +511,30 @@ def _install_chromium() -> None:
         fail(f"Failed to install Chromium: {exc}", 6)
 
 
+def _launch_chromium(chromium, install_deps: bool):
+    try:
+        return chromium.launch()
+    except Exception as exc:  # missing browser binary
+        msg = str(exc).lower()
+        if "install" not in msg and "executable doesn't exist" not in msg:
+            raise
+        if not install_deps:
+            _missing_render_dependency("Chromium")
+        _install_chromium()
+        return chromium.launch()
+
+
 def cmd_render(args: argparse.Namespace) -> None:
     html_path = os.path.abspath(args.html)
     if not os.path.exists(html_path):
         fail(f"No such HTML file: {html_path}")
     out = os.path.abspath(args.out) if args.out else os.path.splitext(html_path)[0] + ".png"
 
-    sync_playwright = _ensure_render_env()
+    sync_playwright = _ensure_render_env(args.install_deps)
 
     errors: list[str] = []
     with sync_playwright() as p:
-        try:
-            browser = p.chromium.launch()
-        except Exception as exc:  # missing browser binary on first run
-            msg = str(exc).lower()
-            if "install" in msg or "executable doesn't exist" in msg:
-                _install_chromium()
-                browser = p.chromium.launch()
-            else:
-                raise
+        browser = _launch_chromium(p.chromium, args.install_deps)
         try:
             page = browser.new_page(
                 viewport={"width": args.width, "height": args.height},
@@ -635,6 +659,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--scale", type=float, default=2.0, help="Device scale factor (default 2)")
     p.add_argument("--full-page", action="store_true", help="Capture the full scrollable page")
     p.add_argument("--selector", help="Screenshot only the element matching this CSS selector")
+    p.add_argument(
+        "--install-deps",
+        action="store_true",
+        help="Explicitly allow installing Playwright and Chromium under "
+        "~/.factiq/viz-venv when missing",
+    )
     p.add_argument(
         "--wait",
         type=int,

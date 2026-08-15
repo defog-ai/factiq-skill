@@ -583,7 +583,7 @@ the API):
 |---|---|
 | `save --out F.json [--tool run_sql] [--match STR] [--index N] [--list]` | Copy a tool result's **raw JSON from the harness transcript** to `F.json` — the shell copies the bytes, you never retype the data. Feeds `assemble --data`. Stdlib only. |
 | `assemble --template T.html --data k1=f1.json k2=f2.json … --out O.html [--open]` | Inject on-disk JSON into your HTML at the `__FACTIQ_DATA__` marker; write one portable, self-contained file. Stdlib only. List **all** key=path pairs after the one `--data` flag. |
-| `render O.html [--out P.png] [--width N] [--height N] [--full-page] [--selector CSS] [--wait MS]` | Screenshot the file in headless Chromium and report JS/console errors + failed asset loads. Installs Playwright + Chromium into `~/.factiq/viz-venv` on first run (uses `uv` if available, else a stdlib venv). |
+| `render O.html [--out P.png] [--width N] [--height N] [--full-page] [--selector CSS] [--wait MS] [--install-deps]` | Screenshot the file in headless Chromium and report JS/console errors + failed asset loads. Does not install anything by default. `--install-deps` explicitly allows Playwright + Chromium installation into `~/.factiq/viz-venv` (using `uv` if available, else a stdlib venv). |
 
 The loop that makes this work — **fetch → save → author → assemble → render →
 look → fix**:
@@ -611,7 +611,12 @@ look → fix**:
 3. `assemble` the self-contained file, then `render` it and **actually read the
    screenshot**. `render` exits **5** when the page logged a JS error or a
    failed request — that usually means a blank page; fix it before judging the
-   visual. One render pass is never enough; budget two or three.
+   visual. One render pass is never enough; budget two or three. If `render`
+   reports that Playwright or Chromium is missing, **do not pass
+   `--install-deps` unless the user explicitly authorizes the local dependency
+   download**. Without that authorization, keep the assembled HTML, use
+   `term_chart.py` to return a terminal/table preview of the same findings, and
+   explain that the HTML was not screenshot-verified.
 4. Hand the user the local file path; offer `--open` to open it in a browser.
 
 If the viz will instead be published as a **claude.ai Artifact** that calls
