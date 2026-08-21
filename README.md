@@ -190,8 +190,8 @@ authors a local output. Data access uses the **FactIQ MCP server** bundled in
 │  discover   search_datasets, describe_dataset, search_series,
 │             get_data_catalog
 │  fetch      run_sql (read-only), get_series, get_market_data,
-│             search_earnings_transcripts, search_media_appearances,
-│             search_news
+│             search_company_filings, search_earnings_transcripts,
+│             search_media_appearances, search_news
 └──────────────┬──────────────┘
                │
 ┌──────────────▼──────────────┐
