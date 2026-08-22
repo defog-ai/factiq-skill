@@ -45,11 +45,13 @@ Four output modes:
   charts, methodology, and terminal previews. Use for broad analytical
   questions. Covered domains route through `references/report-patterns/README.md`.
   If scope is unclear, use `references/report-patterns/interview-step.md` first.
-- **Bespoke local viz** (`build_viz.py`) — a self-contained HTML file you
+- **Bespoke local or published viz** (`build_viz.py`) — a self-contained HTML file you
   author freely and save locally. Use when the answer
   needs something the ChartSpec can't express: a custom layout, a multi-panel
   dashboard, a force/flow/chord diagram, a novel encoding, or fine-grained
-  visual control. See **Bespoke local visualizations** below.
+  visual control. Keep it local by default; when the user asks for a FactIQ
+  link, publish it with `publish_html_report`. See **Bespoke local
+  visualizations** below and `references/output/publish-html-report.md`.
 
 **Data in, output out:**
 
@@ -123,6 +125,11 @@ All FactIQ tools are MCP tools provided by the `factiq` MCP server.
 | `search_media_appearances` (`query`, `search_target?`, `company_filter?`, `person?`, `sort?`, `appearance_type?`, `claim_family?`, `date_from?`, `date_to?`, `detail?`, `limit?`) | Deterministic, lexical retrieval over precomputed public-safe paraphrases of what executives said outside earnings calls; **no serving-time model** interprets or expands the query. Strict lexical FTS runs first, loose any-term FTS only when strict finds no candidates, and trigram fallback only when both FTS stages are empty. Prefer concise topical language and retry company-native synonyms before concluding silence. Canonical targets are `search` (default claims + passages blend), `claims`, `passages`, `pressure_points`, `appearances`, and `coverage`; compatibility aliases `all`, `videos`, and `companies` map respectively to `search`, `appearances`, and `coverage` and are not recommended for new calls. `sort="relevance"` ranks lexical score before publication date; `sort="newest"` ranks publication date before lexical score. `company_filter` accepts comma-separated primary tickers; `person` is a case-insensitive speaker-name substring; `appearance_type`, `claim_family`, inclusive `date_from`/`date_to`, `detail`, and `limit` provide further narrowing. Dates are the video's publication/upload date, not necessarily its recording/event date. `claim_family` makes blended search claims-only, is invalid with `passages`, and requires matching claims for catalog targets. Structured finding rows expose `result_kind`, `canonical_paraphrase`, speaker/topic/video metadata, relevance, and a timestamped YouTube URL; `appearances` returns video-level metadata, attribution, matching-claim count, URL, and relevance; `coverage` returns company-level structured corpus counts and date/channel inventory. `detail=true` adds normalized claim/attribution fields to finding rows, but never raw transcript text or evidence spans; claim-only fields remain null on passages and detail does not change catalog rows. Never put `canonical_paraphrase` in quotation marks or claim it is verbatim; follow the timestamped source when exact wording or tone matters. Empty-query behavior and the complete workflow are in `references/report-patterns/media-intelligence.md`. |
 | `search_news` (`query?`, `tickers?`, `topic?`, `sources?`, `start_date?`, `end_date?`, `sort?`, `limit?`) | Search FactIQ's curated business-news feed — public RSS headlines and summaries from Bloomberg, the Financial Times, and the Wall Street Journal, plus India-macro (Zerodha Daily Brief, ET HealthWorld) and global-health sources (WHO, ECDC, CDC, STAT News, KFF), aggregated and processed by FactIQ so each article carries the listed companies it names (`{symbol, exchange, country}`) and an `analysis` block: searchable keywords, a geography, and an `angle` — one sentence on why the story matters to an investor. Company stories get analysis too, not just macro ones; only content with no business read at all (sports, lifestyle, celebrity) comes back with `analysis: null`. Pivot from a story into data: company stories → `get_market_data` / `search_earnings_transcripts` / `search_company_filings`; macro stories → `search_series` / `run_sql`. Results are headline + short publisher summary + link out, never full articles. `query` is lexical full-text over headline+summary — start with short concrete stems (`"obesity drug"`, `"rate cut"`); if a multi-word query matches nothing in full, the tool automatically retries matching ANY of the words with rare words ranked first, flagged as `meta.query_mode: "any_term"`, so one query attempt is usually enough. `tickers` matches share classes and cross-listings automatically (GOOG also finds GOOGL-tagged articles, TSM its Taiwan listing) — pass whichever symbol you know; most macro stories name no listed company, so zero ticker matches is a normal answer. `topic` is one of markets / economics / companies / technology / politics / world / energy / health / india / opinion — combined with a `query` it is a ranking preference (matching sections rank first, but strong matches from other sections still return, since stories often run outside their obvious feed); without a query it filters to the topic's feeds. `sort` is `"latest"` (default) or `"relevance"` (needs a query); `limit` 1–50 (default 20). Coverage is recent news (most feeds start late 2025), and the feed is continuously being expanded and improved — treat it as a current-events lens, not an archive. |
 | `get_style_guides` (`guides`) | FactIQ house-style guides (`"chart"`, `"report"`, `"sql"`, `"earnings"`, or `"all"`). Use these for current style and sourcing rules. Fetch `"earnings"` before writing from `search_earnings_transcripts`. |
+| `publish_html_report` (`question`, `html`, `data_assets`, `model?`) | Writable clients only. Publish an unassembled bespoke HTML template plus `{key, ref_id}` mappings from prior tools' `_factiq_data_ref.id` values. Returns `/share/{share_id}`; never put result rows in the HTML or publish arguments. |
+
+Eligible data-tool results carry a short-lived `_factiq_data_ref`. Preserve it
+when saving the exact result; it is the only value retransmitted when a bespoke
+HTML report is published.
 
 Every row-returning tool (`run_sql`, `get_series`, `search_company_filings`,
 `search_earnings_transcripts`, `search_media_appearances`) returns **at most 50
@@ -375,7 +382,10 @@ local visualizations**). Local-only; never calls the API.
    the findings, local JSON path, and terminal previews. Bespoke-viz mode: save
    each fetched result with `build_viz.py save`, author an HTML file, assemble
    it, render screenshots, inspect and fix it, then give the user the local HTML
-   and PNG paths.
+   and PNG paths. If the user requested a hosted FactIQ share, follow
+   `references/output/publish-html-report.md`: preview with exact locally saved
+   JSON, publish the unassembled HTML with data references, and return the MCP
+   tool's `share_url`.
 
 ## Subagent orchestration
 
@@ -620,6 +630,12 @@ look → fix**:
    explain that the HTML was not screenshot-verified.
 4. Hand the user the local file path; offer `--open` to open it in a browser.
 
+For a FactIQ-hosted result, do not stop at the assembled local file. Read
+`references/output/publish-html-report.md` and use its exact flow: retain each
+source call's `_factiq_data_ref.id`, locally preview against transcript-saved
+JSON, call `publish_html_report` with the unassembled HTML plus key/reference
+mappings, and return the resulting FactIQ share URL.
+
 If the viz will instead be published as a **claude.ai Artifact** that calls
 FactIQ live from the page (`window.claude.mcp`), read
 `references/output/viz-guide.md` (**Publishing as a claude.ai Artifact with
@@ -706,6 +722,8 @@ payload from the transcript so you never retype the rows.
 - `viz-guide.md` — bespoke local HTML visualizations with `build_viz.py`: the
   assemble/render loop, the `DATA` contract, technique selection
   (ECharts/D3/Canvas/WebGL), a legibility checklist, starter recipes.
+- `publish-html-report.md` — publish bespoke HTML to FactIQ with immutable
+  prior-tool-result references, including local preview and sandbox behavior.
 
 **`references/report-patterns/`** — how to think about broad analytical
 questions. Start at `report-patterns/interview-step.md` when the request is

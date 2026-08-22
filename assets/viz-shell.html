@@ -8,7 +8,9 @@
   After assembly a global `DATA` object is available, keyed by the names you pass
   to `build_viz.py assemble --data <key>=<file.json>`. Each value is the full
   factiq payload, so SQL/series rows live at DATA.<key>.results (columns at
-  DATA.<key>.columns). Load any library you need from a CDN in <head>.
+  DATA.<key>.columns). `factiqData(key)` reads that same local preview data, or
+  fetches ./data/<key>.json when this unassembled template is published through
+  FactIQ. Load any library you need from a CDN in <head>.
 -->
 <html lang="en">
   <head>
@@ -58,11 +60,18 @@ __FACTIQ_DATA__
     </div>
 
     <script>
-      // The single, library-agnostic entry point. `DATA` is whatever you
-      // injected; rows are typically at DATA.<key>.results.
-      const DATA = JSON.parse(
-        document.getElementById("factiq-data").textContent
-      );
+      // Local previews contain assembled JSON. Published templates retain the
+      // marker and load immutable report-scoped JSON by key instead.
+      const factiqDataText = document.getElementById("factiq-data").textContent.trim();
+      const DATA = factiqDataText === "__FACTIQ_DATA__"
+        ? {}
+        : JSON.parse(factiqDataText);
+      async function factiqData(key) {
+        if (Object.prototype.hasOwnProperty.call(DATA, key)) return DATA[key];
+        const response = await fetch(`./data/${encodeURIComponent(key)}.json`);
+        if (!response.ok) throw new Error(`FactIQ data ${key} failed (${response.status})`);
+        return response.json();
+      }
 
       // --- author your visualization below ---
     </script>

@@ -11,6 +11,11 @@ layout, a multi-panel dashboard, a force/flow/chord diagram, an annotated
 narrative, a novel encoding, an interactive cross-filtered view, or just
 fine-grained control over a chart's look.
 
+When the user wants a hosted FactIQ share instead of only a local file, use the
+same author/render loop and then follow `publish-html-report.md`. Publish the
+unassembled template with `_factiq_data_ref` mappings; never publish the
+assembled preview because it contains the locally injected result rows.
+
 ## The three commands
 
 `{plugin_root}/scripts/build_viz.py` is local-only (it never calls the FactIQ
@@ -184,15 +189,21 @@ anywhere else — an HTML comment, a `<div>`, the wrong id — and
 `Cannot read properties of null (reading 'textContent')` and a blank page.
 (Starting from `assets/viz-shell.html` gives you the element for free.)
 
-After `assemble`, the page exposes one global:
+After `assemble`, the page exposes one global and one loader:
 
 ```js
 const DATA = JSON.parse(document.getElementById("factiq-data").textContent);
+const jobs = await factiqData("jobs");
 ```
 
 `DATA[key]` is the **full FactIQ payload** for the file you passed as
 `--data key=file.json` — i.e. exactly the `run_sql` / `get_series` tool result
 you saved to that file:
+
+In the checked-in shell, `factiqData(key)` returns `DATA[key]` in an assembled
+local preview. In an unassembled template published through FactIQ, it instead
+fetches the immutable `./data/{key}.json` asset. Author hosted-capable reports
+against `factiqData(key)` while using `DATA` only in local-only recipes.
 
 - `run_sql` results: `DATA.key.results` is an array of **positional arrays**
   aligned to `DATA.key.columns` (e.g. `["DC", 5.5, "2026-04-01"]`), *not* an
