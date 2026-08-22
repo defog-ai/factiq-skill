@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,7 +20,11 @@ def test_public_plugin_does_not_reference_retired_publishing_tools():
     offenders = {}
     for path in paths:
         text = path.read_text(encoding="utf-8")
-        found = sorted(name for name in RETIRED_NAMES if name in text)
+        found = sorted(
+            name
+            for name in RETIRED_NAMES
+            if re.search(rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])", text)
+        )
         if found:
             offenders[str(path.relative_to(ROOT))] = found
 
@@ -27,4 +32,3 @@ def test_public_plugin_does_not_reference_retired_publishing_tools():
         "Public plugin files still reference retired FactIQ publishing tools: "
         f"{offenders}"
     )
-

@@ -27,6 +27,10 @@ Codex: `codex mcp login factiq`), then retry.
   narrative. Use for one metric, trend, or comparison.
 - **Detailed report** — a local multi-section report with summary, charts,
   methodology notes, and terminal previews. Use for broad analytical requests.
+- **Published bespoke report** — custom HTML rendered locally against exact
+  transcript-saved tool results, then published with `publish_html_report`
+  using only `_factiq_data_ref` mappings. Use when the user asks for a hosted
+  FactIQ report or share URL; follow `references/output/publish-html-report.md`.
 
 If the question clearly fits one mode, proceed without asking. Only when it
 is genuinely ambiguous — broad enough that a report would add value, but a

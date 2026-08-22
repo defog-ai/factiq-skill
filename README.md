@@ -10,7 +10,8 @@ air-quality activity signals,
 rainfall, nighttime lights, shipping and port activity, reservoir levels).
 The agent discovers series, runs read-only SQL, computes derived metrics, and
 returns a sourced answer, terminal preview, report JSON, or bespoke local HTML
-visualization.
+visualization. Writable clients can also publish bespoke HTML to a sandboxed
+FactIQ `/share/{share_id}` page without retranscribing the source data rows.
 
 No codebase or hosted database is required — only a free
 [FactIQ account](https://factiq.com).
@@ -192,6 +193,7 @@ authors a local output. Data access uses the **FactIQ MCP server** bundled in
 │  fetch      run_sql (read-only), get_series, get_market_data,
 │             search_company_filings, search_earnings_transcripts,
 │             search_media_appearances, search_news
+│  publish    publish_html_report (writable clients; immutable data refs)
 └──────────────┬──────────────┘
                │
 ┌──────────────▼──────────────┐
