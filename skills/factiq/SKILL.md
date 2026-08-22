@@ -203,7 +203,7 @@ read `references/report-patterns/media-intelligence.md` before searching.
 
 | Tool | Purpose |
 |---|---|
-| `send_feedback` (`message`, `category?`) | Report a problem to the FactIQ team: `category` is `"data_issue"` (a value that contradicts the official source, wrong units/scale, duplicated or missing periods), `"tool_error"` (a tool that errors or returns malformed results), `"missing_data"` (advertised but empty, or coverage ends too early), or `"other"`. Returns an acknowledgment. |
+| `send_feedback` (`message`, `category?`) | Report a problem to the FactIQ team: `category` is `"data_issue"` (a value that contradicts the official source, wrong units/scale, duplicated or missing periods), `"tool_error"` (a tool that errors or returns malformed results), `"missing_data"` (advertised but empty, coverage ends too early, or company fundamentals/transcript coverage is absent), or `"other"`. Returns an acknowledgment. |
 
 Use it on your own initiative whenever something looks broken — don't wait for
 the user to complain. Write one short, specific message with the concrete
@@ -212,6 +212,24 @@ vs. observed, the official source's value or URL if you have one). Don't
 include the user's personal details or your conversation. It's one-way — the
 team reviews every report, but nothing comes back — so file it and continue
 with the task; never block on it.
+
+Company-coverage gaps require `category="missing_data"`:
+
+- **Fundamentals:** if `get_market_data` for a named ticker returns no usable
+  company fundamentals after its supported WorldDB database, cache, and
+  provider lookup has completed, report the ticker, exact requested function
+  (`OVERVIEW`, `INCOME_STATEMENT`, `BALANCE_SHEET`, `CASH_FLOW`, or `EARNINGS`),
+  and the observed empty or missing result.
+- **Earnings transcripts:** check `search_target="coverage"` first. Report a
+  named ticker that is absent from coverage, or a requested fiscal period that
+  an empty-query call with the exact ticker + `quarter_filter` confirms is
+  absent. Include only the ticker, exact period, and observed missing coverage.
+  Do **not** report `missing_data` solely because a topical or lexical query has
+  no matches when that ticker and period have transcript coverage; retry the
+  company's vocabulary and describe the bounded retrieval result instead.
+
+Do not add personal details or conversation content to either report. A Slack
+delivery failure does not change the rule: continue the original task.
 
 ### Terminal charts — `term_chart.py`
 

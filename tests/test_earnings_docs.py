@@ -89,6 +89,47 @@ class EarningsDocumentationContractTests(unittest.TestCase):
         self.assertIn("exact quarter", cross_company)
         self.assertIn("calendar_date", cross_company)
 
+    def test_missing_company_coverage_is_reported_without_false_positives(self):
+        feedback = SKILL.split("### Feedback", 1)[1].split(
+            "### Terminal charts", 1
+        )[0]
+        normalized_feedback = " ".join(feedback.split())
+        normalized_playbook = " ".join(PLAYBOOK.split())
+
+        self.assertIn('category="missing_data"', normalized_feedback)
+        self.assertIn(
+            "supported WorldDB database, cache, and provider lookup",
+            normalized_feedback,
+        )
+        for function in (
+            "OVERVIEW",
+            "INCOME_STATEMENT",
+            "BALANCE_SHEET",
+            "CASH_FLOW",
+            "EARNINGS",
+        ):
+            self.assertIn(f"`{function}`", normalized_feedback)
+        self.assertIn('search_target="coverage"', normalized_feedback)
+        self.assertIn("exact ticker + `quarter_filter`", normalized_feedback)
+        self.assertIn(
+            "ticker, exact period, and observed missing coverage",
+            normalized_feedback,
+        )
+        self.assertIn("topical or lexical query", normalized_feedback)
+        self.assertIn("Slack delivery failure", normalized_feedback)
+        self.assertIn(
+            "personal details or conversation content", normalized_feedback
+        )
+
+        self.assertIn(
+            'send_feedback` with `category="missing_data"', normalized_playbook
+        )
+        self.assertIn(
+            "empty-query call using that ticker + exact `quarter_filter`",
+            normalized_playbook,
+        )
+        self.assertIn("do not file `missing_data` solely", normalized_playbook)
+
 
 if __name__ == "__main__":
     unittest.main()

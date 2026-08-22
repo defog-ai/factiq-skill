@@ -28,9 +28,16 @@ consistent with the data", "who mentioned <theme> this quarter".
 the authoritative coverage window; do not rely on a static assumption about
 how many calls exist. If a ticker is not covered, say so and fall back to the
 `sec` schema plus `get_market_data`; never silently substitute filed data for
-spoken remarks.
+spoken remarks. Also file `send_feedback` with `category="missing_data"`, naming
+only the ticker and the observed missing transcript coverage. If the ticker is
+covered but the user requested an exact fiscal period, confirm it with an
+empty-query call using that ticker + exact `quarter_filter`; if that call shows
+the period is absent, report the ticker, exact period, and observed missing
+coverage with the same category.
 An uncovered period, an empty lexical result, or a partial result is never
-evidence management did not discuss a topic.
+evidence management did not discuss a topic. In particular, do not file
+`missing_data` solely because a topical or lexical search has no matches for a
+ticker and fiscal period that do have coverage.
 
 ## Target and Filter Reference
 
