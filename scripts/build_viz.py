@@ -397,6 +397,7 @@ def cmd_assemble(args: argparse.Namespace) -> None:
 
 
 VENV_DIR = os.path.expanduser("~/.factiq/viz-venv")
+PLAYWRIGHT_PACKAGE = "playwright==1.62.0"
 
 
 def _venv_python(venv_dir: str) -> str:
@@ -484,9 +485,17 @@ def _ensure_render_env(install_deps: bool):
             flush=True,
         )
         cmd = (
-            [uv, "pip", "install", "--python", venv_py, "--quiet", "playwright"]
+            [
+                uv,
+                "pip",
+                "install",
+                "--python",
+                venv_py,
+                "--quiet",
+                PLAYWRIGHT_PACKAGE,
+            ]
             if uv
-            else [venv_py, "-m", "pip", "install", "--quiet", "playwright"]
+            else [venv_py, "-m", "pip", "install", "--quiet", PLAYWRIGHT_PACKAGE]
         )
         try:
             subprocess.run(cmd, check=True)

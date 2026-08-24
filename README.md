@@ -255,7 +255,10 @@ Where the behavior lives — the files contributors will touch:
 - `scripts/build_viz.py` — local-only tool that assembles fetched data into a
   self-contained HTML viz and screenshots it headless for iteration. It never
   installs Playwright or Chromium unless `--install-deps` is explicitly
-  passed; usage in [`references/output/viz-guide.md`](references/output/viz-guide.md)
+  passed. On the first approved install it creates the dedicated
+  `~/.factiq/viz-venv`, installs the pinned Playwright package there, and
+  downloads Playwright's matching Chromium build; usage in
+  [`references/output/viz-guide.md`](references/output/viz-guide.md)
 - `assets/viz-shell.html` — starting-point shell for bespoke visualizations
 
 Plugin plumbing — you shouldn't need to touch these:

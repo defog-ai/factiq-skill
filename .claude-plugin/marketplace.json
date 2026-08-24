@@ -1,7 +1,9 @@
 {
   "name": "factiq",
+  "description": "FactIQ plugins for sourced economic, financial, company, market, news, and satellite-data analysis.",
   "owner": {
-    "name": "Defog"
+    "name": "Defog",
+    "url": "https://defog.ai"
   },
   "plugins": [
     {
