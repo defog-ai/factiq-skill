@@ -110,6 +110,28 @@ passkey). Start a new Codex thread after installation; the skill auto-invokes
 for economic/financial data questions.
 
 <details>
+<summary>Authenticate from a remote or headless machine</summary>
+
+Run the normal login command on the remote machine:
+
+```bash
+codex mcp login factiq
+```
+
+1. Copy the authorization URL printed by Codex and open it in a browser on
+   your local machine.
+2. On the FactIQ authorization page, select **I'm signing in from a remote or
+   headless machine**.
+3. Sign in and approve access as usual.
+4. Copy the one-time completion command FactIQ shows and paste it into the
+   remote terminal where Codex is waiting.
+
+Codex verifies the same OAuth state and PKCE challenge as the normal browser
+redirect, then stores the connection normally. No SSH port forwarding or
+long-lived token is required.
+</details>
+
+<details>
 <summary>Update an existing Codex install</summary>
 
 To update after this marketplace changes, refresh the configured marketplace
