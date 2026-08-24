@@ -41,6 +41,12 @@ class DocumentationContractTests(unittest.TestCase):
 
 
 class RenderDependencyOptInTests(unittest.TestCase):
+    def test_playwright_install_is_pinned(self):
+        self.assertRegex(
+            build_viz.PLAYWRIGHT_PACKAGE,
+            r"^playwright==\d+\.\d+\.\d+$",
+        )
+
     def test_install_deps_is_off_by_default_and_requires_a_flag(self):
         parser = build_viz.build_parser()
 
@@ -92,6 +98,35 @@ class RenderDependencyOptInTests(unittest.TestCase):
             build_viz._ensure_render_env(install_deps=False)
 
         execve.assert_called_once()
+
+    def test_approved_install_uses_the_pinned_playwright_package(self):
+        real_import = __import__
+
+        def import_without_playwright(name, *args, **kwargs):
+            if name == "playwright.sync_api":
+                raise ImportError("not installed")
+            return real_import(name, *args, **kwargs)
+
+        def fake_run(command, **_kwargs):
+            if command[-2:] == ["-c", "import playwright.sync_api"]:
+                return mock.Mock(returncode=1)
+            return mock.Mock(returncode=0)
+
+        with (
+            mock.patch("builtins.__import__", side_effect=import_without_playwright),
+            mock.patch.object(build_viz.os.path, "exists", return_value=False),
+            mock.patch.object(build_viz.shutil, "which", return_value="/usr/bin/uv"),
+            mock.patch.object(build_viz.subprocess, "run", side_effect=fake_run) as run,
+            mock.patch.object(build_viz.os, "execve"),
+        ):
+            build_viz._ensure_render_env(install_deps=True)
+
+        install_command = next(
+            call.args[0]
+            for call in run.call_args_list
+            if "install" in call.args[0]
+        )
+        self.assertEqual(install_command[-1], build_viz.PLAYWRIGHT_PACKAGE)
 
     def test_missing_chromium_is_not_installed_without_opt_in(self):
         chromium = mock.Mock()
