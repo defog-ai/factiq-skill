@@ -7,9 +7,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class DirectorySubmissionReadinessTests(unittest.TestCase):
-    def test_claude_manifests_have_complete_publisher_metadata(self):
+    def test_manifests_have_complete_factiq_publisher_metadata(self):
         plugin = json.loads(
             (ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+        )
+        codex = json.loads(
+            (ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
         )
         marketplace = json.loads(
             (ROOT / ".claude-plugin" / "marketplace.json").read_text(
@@ -17,14 +20,20 @@ class DirectorySubmissionReadinessTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual(plugin["author"]["url"], "https://defog.ai")
+        expected_publisher = {
+            "name": "FactIQ",
+            "url": "https://www.factiq.com",
+        }
+        self.assertEqual(plugin["author"], expected_publisher)
+        self.assertEqual(codex["author"], expected_publisher)
+        self.assertEqual(codex["interface"]["developerName"], "FactIQ")
         self.assertEqual(
             plugin["repository"], "https://github.com/defog-ai/factiq-plugin"
         )
         self.assertEqual(plugin["license"], "MIT")
         self.assertTrue(plugin["keywords"])
         self.assertTrue(marketplace["description"])
-        self.assertEqual(marketplace["owner"]["url"], "https://defog.ai")
+        self.assertEqual(marketplace["owner"], expected_publisher)
 
     def test_claude_and_codex_versions_stay_in_sync(self):
         claude = json.loads(

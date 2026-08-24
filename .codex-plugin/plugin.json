@@ -3,8 +3,8 @@
   "description": "Answer economic and financial data questions with real FactIQ data — official data, markets, earnings calls, executive media appearances, and satellite-derived signals including crop fires and wildfires — then return sourced answers, terminal previews, report JSON, or bespoke local HTML visualizations.",
   "version": "0.28.0",
   "author": {
-    "name": "Defog",
-    "url": "https://defog.ai"
+    "name": "FactIQ",
+    "url": "https://www.factiq.com"
   },
   "homepage": "https://github.com/defog-ai/factiq-plugin",
   "repository": "https://github.com/defog-ai/factiq-plugin",
@@ -22,7 +22,7 @@
     "displayName": "FactIQ",
     "shortDescription": "Economic and financial data analysis",
     "longDescription": "Use FactIQ for catalog search, read-only SQL, market data, earnings-transcript search, deterministic executive-media search, satellite signals, terminal previews, report JSON, and bespoke local HTML visualizations.",
-    "developerName": "Defog",
+    "developerName": "FactIQ",
     "category": "Finance",
     "capabilities": [
       "Interactive",
