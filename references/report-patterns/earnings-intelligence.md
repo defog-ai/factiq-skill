@@ -36,8 +36,8 @@ evidence management did not discuss a topic.
 
 | `search_target` | What `query` does | Applicable filters and returned detail |
 |---|---|---|
-| `claims` | Ranked lexical search; `query=""` browses rows | `company_filter`, exact `quarter_filter`, `claim_family` (primary or secondary family), `section`, `detail`, and `limit`. `detail=true` adds `structured_fields`, secondary families, period/horizon, conviction, denominator, and the `falsifiable` flag. |
-| `pressure_points` | Ranked lexical search; `query=""` browses Q&A pressure rows | `company_filter`, exact `quarter_filter`, `claim_family` (the linked family), `detail`, and `limit`. `section` is ignored because every row is Q&A. `detail=true` adds `tone_note`. |
+| `claims` | Ranked lexical search; `query=""` browses rows | `company_filter`, exact `quarter_filter`, `claim_family` (primary or secondary family), `section`, `detail`, and `limit`. Every row includes `transcript_id`, `source_block_index`, `qa_turn_id`, and `source_link`; `detail=true` adds `structured_fields`, secondary families, period/horizon, conviction, denominator, and the `falsifiable` flag. |
+| `pressure_points` | Ranked lexical search; `query=""` browses Q&A pressure rows | `company_filter`, exact `quarter_filter`, `claim_family` (the linked family), `detail`, and `limit`. Every row includes the same transcript locator and source-link fields. `section` is ignored because every row is Q&A. `detail=true` adds `tone_note`. |
 | `disclosure_profile` | No text search: direct company lookup | Uses the first ticker in `company_filter`, or `query` as the ticker. It is accumulated at company level. `quarter_filter` is ignored; `claim_family`, `section`, `detail`, and `limit` are also ignored. |
 | `coverage` | No theme search: corpus inventory | `company_filter` and `limit` apply. `query`, `quarter_filter`, `claim_family`, `section`, and `detail` do not narrow the inventory. |
 
@@ -93,7 +93,9 @@ sub-word variants. This is lexical, not semantic retrieval:
 6. Report: summary (the synthesis, not a recap) → guidance table → quote
    panels for the load-bearing verbatim statements → verification charts →
    watch-list from the refusals. State the pinned fiscal period, coverage
-   window, and whether either bounded browse hit 50 rows.
+   window, and whether either bounded browse hit 50 rows. Put each used row's
+   provided `source_link.source_url` beside its quote as a Markdown link; if it
+   is null, state that the direct transcript link is unavailable.
 
 ### 2. Claim-vs-data verification (the FactIQ edge)
 
@@ -202,6 +204,10 @@ quote-filled text panels.
   analyst; `mgmt_declined_to_confirm` is a refusal, and often the finding.
 - Only `verbatim_quote` may appear in quotation marks or quote panels.
   `canonical_statement` is normalized content for synthesis, not a quotation.
+- Put the exact row's provided source URL beside every quote or filing-backed
+  figure. Do not make another tool call just to find the citation, reconstruct
+  a URL, or substitute a related press release. A document-precision URL is
+  not an exact-context link. When `source_url` is null, say it is unavailable.
 - Retrieval is lexical. A broad/partial hit is not proof of the full theme,
   and an empty result is not proof of silence — inspect rows, sweep the
   company's own vocabulary, and report the coverage boundary.
