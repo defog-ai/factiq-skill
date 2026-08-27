@@ -88,7 +88,8 @@ sub-word variants. This is lexical, not semantic retrieval:
 5. Antithesis pass: pair the 3–5 most checkable claims with filed data —
    `sec` XBRL for actuals, `sec_kpi` for operating metrics, `sec_guidance`
    for the formal targets — and the call-window price move
-   (`get_market_data`, TIME_SERIES_DAILY around `calendar_date`).
+   (`get_market_data` with `data_type="price_history"`,
+   `frequency="daily"`, and a deliberate `limit`).
 6. Report: summary (the synthesis, not a recap) → guidance table → quote
    panels for the load-bearing verbatim statements → verification charts →
    watch-list from the refusals. State the pinned fiscal period, coverage
@@ -121,7 +122,7 @@ the data contradicts or cannot yet test the claim.
 2. Formal targets: `sec_guidance` series
    (`{TICKER}_{metric}[_growth]_guidance_{period}_{bound}_*`) — check
    whether the spoken and filed guidance agree.
-3. Actuals as they land: `sec` XBRL / `get_market_data` INCOME_STATEMENT.
+3. Actuals as they land: `search_company_filings` for filed company results.
 4. Output: one table — metric, guided value/range, vs-prior, spoken vs
    formal, actual, verdict. `falsifiable=true` claims (in `detail` output)
    are the rows this table is made of.
@@ -177,8 +178,8 @@ used at all.
 1. `search_earnings_transcripts` — spoken claims, Q&A, disclosure habits.
 2. `sec` via `run_sql` — filed XBRL segment/product/geo detail, `sec_guidance`
    formal targets, `sec_kpi` operating metrics.
-3. `get_market_data` — consolidated statements (faster than XBRL), quotes,
-   price history for reaction windows.
+3. `get_market_data` — quotes, company/ETF profiles, and price history for
+   reaction windows.
 4. Macro schemas (`bls`/`census`/`eia`/`frb`/trade/`policy`) — the
    verification layer for any macro claim.
 5. Never `run_sql` on the `transcripts` schema — it is bespoke and gated;
