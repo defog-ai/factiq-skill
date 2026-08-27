@@ -167,7 +167,8 @@ class MediaDocumentationContractTests(unittest.TestCase):
             CLAUDE_MARKETPLACE["plugins"][0]["description"].casefold(),
         )
         self.assertIn(
-            "executive-media search", CODEX_MANIFEST["interface"]["longDescription"]
+            "executive media appearances",
+            CODEX_MANIFEST["interface"]["longDescription"],
         )
 
 

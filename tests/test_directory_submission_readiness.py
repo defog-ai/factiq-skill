@@ -62,6 +62,36 @@ class DirectorySubmissionReadinessTests(unittest.TestCase):
         )
         interface = manifest["interface"]
 
+        expected_long_description = (
+            "FactIQ gives ChatGPT and Codex primarily read-only access to sourced "
+            "investment and economic data through one normalized warehouse. "
+            "Research official statistics across the US, UK, EU, China, India, "
+            "Singapore, and international institutions; inspect company filings "
+            "and earnings-call intelligence; query market prices, business news, "
+            "executive media appearances, trade, and satellite-derived signals "
+            "such as rainfall, fires, air quality, nighttime lights, shipping, and "
+            "reservoir levels. FactIQ can discover datasets, run read-only SQL, "
+            "calculate comparisons, return sourced analysis, and create inline "
+            "charts. A free FactIQ account is enough to connect. FactIQ records "
+            "connector tool inputs and outputs for reliability and support as "
+            "described in the privacy policy. `send_feedback` is the only write "
+            "tool and sends a short issue report to the FactIQ team; it does not "
+            "modify research data."
+        )
+        expected_prompts = [
+            "Compare US inflation and unemployment since 2020 and explain the "
+            "turning points.",
+            "What did Microsoft say about AI spending in its latest earnings call, "
+            "and how does that compare with filed results?",
+            "Compare Punjab rainfall and fire activity during the 2024 and 2025 "
+            "monsoon seasons.",
+        ]
+
+        self.assertEqual(
+            interface["shortDescription"], "Investment and economic data"
+        )
+        self.assertEqual(interface["longDescription"], expected_long_description)
+        self.assertEqual(interface["defaultPrompt"], expected_prompts)
         self.assertLessEqual(len(interface["shortDescription"]), 30)
         self.assertLessEqual(len(interface["defaultPrompt"]), 3)
         for prompt in interface["defaultPrompt"]:
