@@ -1,7 +1,7 @@
 {
   "name": "factiq",
   "description": "Answer economic and financial data questions with real FactIQ data — official data, markets, earnings calls, executive media appearances, and satellite-derived signals including crop fires and wildfires — then return sourced answers, terminal previews, report JSON, or bespoke local HTML visualizations.",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "author": {
     "name": "FactIQ",
     "url": "https://www.factiq.com"
@@ -20,7 +20,7 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "FactIQ",
-    "shortDescription": "Economic and financial data analysis",
+    "shortDescription": "Economic and financial data",
     "longDescription": "Use FactIQ for catalog search, read-only SQL, market data, earnings-transcript search, deterministic executive-media search, satellite signals, terminal previews, report JSON, and bespoke local HTML visualizations.",
     "developerName": "FactIQ",
     "category": "Finance",
@@ -32,9 +32,13 @@
     "defaultPrompt": [
       "Chart inflation and unemployment trends",
       "Compare GDP growth across countries",
-      "Search recent earnings-call themes",
-      "Compare executive media appearances with earnings calls"
+      "Compare earnings calls with executive interviews"
     ],
-    "brandColor": "#2563EB"
+    "brandColor": "#2563EB",
+    "websiteURL": "https://www.factiq.com",
+    "privacyPolicyURL": "https://www.factiq.com/privacy",
+    "termsOfServiceURL": "https://www.factiq.com/legal",
+    "composerIcon": "./assets/factiq-logo.png",
+    "logo": "./assets/factiq-logo.png"
   }
 }

@@ -209,7 +209,11 @@ another dataset, or splitting day passes from night passes.
 - Crop burning, wildfires, gas flaring → `get_geo_data` first; drop to the
   `nasa_fires` schema only for shapes the tool doesn't cover (see "The
   nasa_fires schema" above)
-- Company-specific: consolidated quotes/fundamentals → `get_market_data` tool (not SQL); segment/product/geography detail, forward guidance, or operating KPIs (ARR, RevPAR, ...) → `sec` schema via `run_sql`; what management said live on a call → `search_earnings_transcripts` tool (not SQL)
+- Company-specific: quotes, price history, and company/ETF profiles →
+  `get_market_data`; filed financials, segment/product/geography detail,
+  forward guidance, or operating KPIs (ARR, RevPAR, ...) →
+  `search_company_filings`; what management said live on a call →
+  `search_earnings_transcripts` (not SQL)
 - What executives said in podcasts, television interviews, and conferences
   outside earnings calls → `search_media_appearances` (not SQL); follow `references/report-patterns/media-intelligence.md`
 
