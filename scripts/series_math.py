@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic arithmetic on fetched FactIQ results — no in-context math.
 
-Reads the payload JSON that run_sql / get_series return (save it to disk with
-the bundled `build_viz.py save --match "<distinctive fragment>" --out f.json`
-so the bytes never pass through your output) and prints a computed table.
+Reads a saved payload JSON object from `run_sql` / `get_series` and prints a
+computed table.
 Use this instead of computing growth rates, shares, or unit conversions in
 your own tokens: the script's arithmetic is exact and repeatable.
 
@@ -63,7 +62,7 @@ def load_table(path: str) -> tuple[list[str], list[list]]:
     ):
         fail(
             f"{path} is not a FactIQ payload (expected an object with 'columns' and "
-            "'results' — the shape build_viz.py save writes)"
+            "'results')"
         )
     columns = payload["columns"]
     rows = payload["results"]

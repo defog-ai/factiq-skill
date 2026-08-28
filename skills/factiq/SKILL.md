@@ -22,7 +22,7 @@ market data, transcript and media search, satellite signals, style guides, and
 feedback. There is no server-side agent. You decompose the question, fetch the
 data, do the math, then answer or build a local output.
 
-Four output modes:
+Three output modes:
 
 - **Direct answer** — a plain-text sentence with no chart. Use
   when the question asks for a single current value or a simple scalar lookup
@@ -40,11 +40,6 @@ Four output modes:
   charts, methodology, and terminal previews. Use for broad analytical
   questions. Covered domains route through `references/report-patterns/README.md`.
   If scope is unclear, use `references/report-patterns/interview-step.md` first.
-- **Bespoke local viz** (`build_viz.py`) — a self-contained HTML file you
-  author freely and save locally. Use when the answer
-  needs something the ChartSpec can't express: a custom layout, a multi-panel
-  dashboard, a force/flow/chord diagram, a novel encoding, or fine-grained
-  visual control. See **Bespoke local visualizations** below.
 
 **Data in, output out:**
 
@@ -54,11 +49,9 @@ Four output modes:
 
   ```bash
   python3 "{plugin_root}/scripts/term_chart.py" render ... # terminal ChartSpec preview
-  python3 "{plugin_root}/scripts/build_viz.py"  ...   # local visualization helper
   python3 "{plugin_root}/scripts/comext_sql.py" ...   # SQL generator: Eurostat Comext (EU) trade
   python3 "{plugin_root}/scripts/trade_sql.py"  ...   # SQL generator: US/China/India/Korea/Japan/Taiwan customs
   python3 "{plugin_root}/scripts/hs_codes.py"   ...   # HS commodity code <-> name, offline
-  python3 "{plugin_root}/scripts/series_math.py" ...  # YoY/YTD/share/index/merge on saved results
   ```
 
   Resolve `{plugin_root}` once, then reuse it. In Claude Code it is
@@ -75,8 +68,7 @@ Four output modes:
   partner-code system, units, and HS-level rules, so the query is correct by
   construction — run `--help` on either for the subcommands (total / products /
   trend). Label the HS codes a ranking returns with `hs_codes.py` (zero server
-  calls), and do growth/share arithmetic with `series_math.py` on results saved
-  via `build_viz.py save` rather than in your own output.
+  calls), and compute growth or shares from the fetched results.
 
 ## Setup
 
@@ -200,8 +192,7 @@ read `references/report-patterns/media-intelligence.md` before searching.
 |---|---|
 | `send_feedback` (`message`, `category?`) | Report a problem to the FactIQ team: `category` is `"data_issue"` (a value that contradicts the official source, wrong units/scale, duplicated or missing periods), `"tool_error"` (a tool that errors or returns malformed results), `"missing_data"` (advertised but empty, or coverage ends too early), or `"other"`. Returns an acknowledgment. |
 
-Use it on your own initiative whenever something looks broken — don't wait for
-the user to complain. Write one short, specific message with the concrete
+Call this when a tool result looks broken. Write one short, specific message with the concrete
 identifiers (schema, `dataset_code` / `series_id`, the SQL you ran, expected
 vs. observed, the official source's value or URL if you have one). Don't
 include the user's personal details or your conversation. It's one-way — the
@@ -253,18 +244,11 @@ the user's terminal, use `--charset ascii --color never` for previews you paste
 into the final answer. Use ANSI color for real terminal stdout or saved `.ansi`
 previews.
 
-### Local viz — `build_viz.py`
-
-`build_viz.py save … / assemble … / render …` saves raw tool results to disk
-(no retyping), builds, and screenshots a bespoke local HTML viz (see **Bespoke
-local visualizations**). Local-only; never calls the API.
-
 ## Orchestration workflow
 
 0. **Interview before major forks.** If the request is broad, vague, or about
-   to become a high-commitment workflow — especially a detailed report,
-   multi-panel dashboard, bespoke visualization, or a report that could follow
-   multiple scopes — use an explorer-agent interview before fetching data or
+   to become a high-commitment workflow — especially a detailed report or one
+   that could follow multiple scopes — use an explorer-agent interview before fetching data or
    spawning research subagents. Read
    `references/report-patterns/interview-step.md` and ask only the few choices
    that would materially change the work: detail level, audience, user context
@@ -361,16 +345,13 @@ local visualizations**). Local-only; never calls the API.
    itself — every detection since 2012 — so a fourteen-year seasonal comparison
    is one call. Satellite data complements warehouse series; prefer curated
    series where both exist.
-7. **Answer, render, or build.** Direct-answer mode: reply with one sentence
+7. **Answer or render.** Direct-answer mode: reply with one sentence
    that states the number, period, and source. Quick-chart mode: build a
    ChartSpec from wide-format data (see `references/output/chart-spec.md`), save
    it to JSON, run `term_chart.py render`, and paste the preview into a fenced
    code block. Report mode: build and save a report object (see
    `references/output/report-spec.md`), run `term_chart.py report`, and return
-   the findings, local JSON path, and terminal previews. Bespoke-viz mode: save
-   each fetched result with `build_viz.py save`, author an HTML file, assemble
-   it, render screenshots, inspect and fix it, then give the user the local HTML
-   and PNG paths.
+   the findings, local JSON path, and terminal previews.
 
 ## Subagent orchestration
 
@@ -423,22 +404,14 @@ Steps:
 1. search_datasets / describe_dataset / search_series to find the right series.
 2. Fetch data with get_series or run_sql. Aggregate in SQL to stay under the
    50-row cap.
-3. Save each fetched result to its own JSON file so a later charting step can
-   load the exact numbers instead of re-querying FactIQ or retyping them.
-   Right after each fetch, run (no retyping — it copies the payload from the
-   transcript), giving each file a thread-unique name and a --match on a
-   distinctive bit of your own SQL so a sibling agent's result can't be grabbed:
-   `python3 {plugin_root}/scripts/build_viz.py save --tool run_sql --match "<distinctive SQL fragment>" --out /tmp/factiq-raw/{thread_label}-<name>.json`
-4. Compute derived metrics (YoY, ratios, indices) yourself.
-5. Return your findings as a structured block:
+3. Compute derived metrics (YoY, ratios, indices) yourself.
+4. Return your findings as a structured block:
 
 FINDINGS:
 - sub_question: (echo it back)
 - series_used: [{schema, series_id, title}, ...]
 - sql_queries: [the exact SQL you ran, formatted multi-line]
 - data: [{columns: [...], rows: [...]}, ...] — the actual fetched/computed values
-- raw_data_files: [/tmp/factiq-raw/{thread_label}-*.json, ...] — the files you
-  saved in step 3, so a downstream viz/report step loads exact data
 - key_insights: [1-3 sentences stating what the data shows, with numbers]
 - chart_suggestion: {chart_type, title, x_column, y_columns, units}
 ```
@@ -525,7 +498,6 @@ agent with the spec and all three findings blocks. The assembler builds a
 - Quick-chart mode (single metric, single chart).
 - Single-topic questions even in report mode ("How has US unemployment evolved
   since 2020?" — one thread, no decomposition needed).
-- Bespoke local visualizations — the build_viz loop is inherently iterative and
 
 For these cases, do the research and build the output in the main context.
 
@@ -562,69 +534,6 @@ Check the report object against `references/output/report-spec.md`, save it to
 JSON, and render it with `term_chart.py report`. Return the report findings, the
 local JSON path, and visible terminal previews.
 
-## Bespoke local visualizations
-
-When the answer needs a custom layout, a dashboard of several panels, a
-force/flow/chord diagram, an annotated narrative, a novel encoding, or fine
-visual control, build a self-contained local HTML file.
-There is no fixed chart-type list: author the HTML/JS with ECharts, D3, Canvas, SVG, or WebGL,
-inject the data you already fetched, then render and iterate. Read
-`references/output/viz-guide.md` before starting — it covers technique selection, the
-data contract, and the legibility checklist.
-
-The tool is `{plugin_root}/scripts/build_viz.py` (local-only — it never calls
-the API):
-
-| Command | Purpose |
-|---|---|
-| `save --out F.json [--tool run_sql] [--match STR] [--index N] [--list]` | Copy a tool result's **raw JSON from the harness transcript** to `F.json` — the shell copies the bytes, you never retype the data. Feeds `assemble --data`. Stdlib only. |
-| `assemble --template T.html --data k1=f1.json k2=f2.json … --out O.html [--open]` | Inject on-disk JSON into your HTML at the `__FACTIQ_DATA__` marker; write one portable, self-contained file. Stdlib only. List **all** key=path pairs after the one `--data` flag. |
-| `render O.html [--out P.png] [--width N] [--height N] [--full-page] [--selector CSS] [--wait MS] [--install-deps]` | Screenshot the file in headless Chromium and report JS/console errors + failed asset loads. Does not install anything by default. `--install-deps` explicitly allows Playwright + Chromium installation into `~/.factiq/viz-venv` (using `uv` if available, else a stdlib venv). |
-
-The loop that makes this work — **fetch → save → author → assemble → render →
-look → fix**:
-
-1. Fetch the data with the MCP tools, then **save each result to a JSON file
-   with `build_viz.py save` — do not retype it via Write**. The MCP tools return
-   their payload into your context, not to disk; `save` lifts that exact payload
-   back out of the harness transcript so the shell copies the bytes (never
-   re-emit a ~100-row result by hand — it double-pays the tokens and one
-   mistyped digit ships a wrong chart with no error). Run one `save` per fetch,
-   pinning the call with `--tool`/`--match`:
-   ```bash
-   python3 "{plugin_root}/scripts/build_viz.py" save --match "korea_customs" --out /tmp/korea.json
-   ```
-   The file holds the tool's own `{columns, results, …}` payload — see
-   `references/output/viz-guide.md` (**Saving data without retyping**) for `--list`,
-   `--index`, and the fallback when a transcript can't be found. Because the MCP
-   caps results at 50 rows, this is context-cheap; aggregate or window in SQL to
-   get exactly the rows the viz needs.
-2. Copy `assets/viz-shell.html`, add any CDN library you need, and author the
-   viz. Keep the `__FACTIQ_DATA__` marker inside its
-   `<script id="factiq-data" type="application/json">` tag — that exact element
-   is where the data lands and how the page reads it back. After assembly the
-   page exposes a `DATA` global; rows are at `DATA.<key>.results`.
-3. `assemble` the self-contained file, then `render` it and **actually read the
-   screenshot**. `render` exits **5** when the page logged a JS error or a
-   failed request — that usually means a blank page; fix it before judging the
-   visual. One render pass is never enough; budget two or three. If `render`
-   reports that Playwright or Chromium is missing, **do not pass
-   `--install-deps` unless the user explicitly authorizes the local dependency
-   download**. Without that authorization, keep the assembled HTML, use
-   `term_chart.py` to return a terminal/table preview of the same findings, and
-   explain that the HTML was not screenshot-verified.
-4. Hand the user the local file path; offer `--open` to open it in a browser.
-
-If the viz will instead be published as a **claude.ai Artifact** that calls
-FactIQ live from the page (`window.claude.mcp`), read
-`references/output/viz-guide.md` (**Publishing as a claude.ai Artifact with
-live data**) first. In short: declare the capability as `factiq` (the default
-connector name) and publish without asking; when you deliver the link, tell
-the user that if the page can't find their connector they should send you its
-exact name from claude.ai Settings → Connectors so you can republish with it.
-In the page's own JS, discover the callable server at runtime with
-`listTools()` rather than hardcoding a name.
-
 ## Context budget — the 50-row cap
 
 Every row-returning MCP tool (`run_sql`, `get_series`) returns **at most 50
@@ -649,9 +558,7 @@ is to **aggregate or compute it in SQL**, not to try to fetch the raw rows:
   make a few windowed calls and stitch them.
 
 Whatever you chart or report has to be the aggregated result you bring back —
-which is also all it needs. For `build_viz`, persist that (already small) result
-to a JSON file with `build_viz.py save` before assembling — it copies the
-payload from the transcript so you never retype the rows.
+which is also all it needs.
 
 ## Errors and limits
 
@@ -698,9 +605,6 @@ payload from the transcript so you never retype the rows.
 - `chart-spec.md` — ChartSpec format, chart-type selection, terminal rendering, and a worked example.
 - `report-spec.md` — report JSON format: sections, per-chart fields,
   sources, lineage, limits, and a worked example.
-- `viz-guide.md` — bespoke local HTML visualizations with `build_viz.py`: the
-  assemble/render loop, the `DATA` contract, technique selection
-  (ECharts/D3/Canvas/WebGL), a legibility checklist, starter recipes.
 
 **`references/report-patterns/`** — how to think about broad analytical
 questions. Start at `report-patterns/interview-step.md` when the request is
