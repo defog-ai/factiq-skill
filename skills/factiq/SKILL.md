@@ -8,10 +8,9 @@ description: >
   levels, shipping, ports, and chokepoints by country, state, or bounding box.
   Use for unemployment, inflation, GDP, wages, energy, trade flows, stocks,
   commodities, forex, earnings intelligence, drought and monsoon conditions,
-  wildfires, economic charts and maps, terminal previews, research reports,
-  and custom HTML dashboards. Discover series, query read-only SQL, compute,
-  then return a sourced answer or local output. Use the bundled SQL generators
-  for bilateral trade.
+  wildfires, economic charts and maps, terminal previews, and research reports.
+  Discover series, query read-only SQL, compute, then return a sourced answer or
+  local output. Use the bundled SQL generators for bilateral trade.
 ---
 
 # FactIQ Data Tools
@@ -52,6 +51,7 @@ Three output modes:
   python3 "{plugin_root}/scripts/comext_sql.py" ...   # SQL generator: Eurostat Comext (EU) trade
   python3 "{plugin_root}/scripts/trade_sql.py"  ...   # SQL generator: US/China/India/Korea/Japan/Taiwan customs
   python3 "{plugin_root}/scripts/hs_codes.py"   ...   # HS commodity code <-> name, offline
+  python3 "{plugin_root}/scripts/series_math.py" ...  # YoY/YTD/share/index/merge on saved results
   ```
 
   Resolve `{plugin_root}` once, then reuse it. In Claude Code it is
@@ -68,7 +68,8 @@ Three output modes:
   partner-code system, units, and HS-level rules, so the query is correct by
   construction — run `--help` on either for the subcommands (total / products /
   trend). Label the HS codes a ranking returns with `hs_codes.py` (zero server
-  calls), and compute growth or shares from the fetched results.
+  calls), and use `series_math.py` for growth or shares when you have saved the
+  fetched payload locally.
 
 ## Setup
 
@@ -323,9 +324,13 @@ previews.
    windows, especially 5+ years, usually summarize with annual totals, YTD
    comparisons, latest/prior snapshots, or selected turning points. Do not
    default categorically to monthly or yearly rows.
-4. **Compute yourself.** YoY growth, rebasing to an index, per-capita, ratios —
-   write your own Python locally on the fetched values. There is no server-side
-   code interpreter in this loop.
+4. **Compute deterministically.** For YoY/YTD growth, shares, rebasing, or
+   merging compatible results, save the fetched `columns` and `results` as a
+   local FactIQ payload and use `series_math.py`. Never inspect Claude/Codex
+   transcripts or session directories to recover tool results. For other
+   metrics such as per-capita values or custom ratios, write a small local
+   Python calculation on the fetched values. There is no server-side code
+   interpreter in this loop.
 5. **Recent market data.** The DB lags for very recent market/price data — use
    `get_market_data` for current quotes, commodities, and FX. For what the
    news is saying about a company, sector, or economy right now, use
