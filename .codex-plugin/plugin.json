@@ -1,6 +1,6 @@
 {
   "name": "factiq",
-  "description": "Answer economic and financial data questions with real FactIQ data — official data, markets, earnings calls, executive media appearances, and satellite-derived signals including crop fires and wildfires — then return sourced answers, terminal previews, report JSON, or bespoke local HTML visualizations.",
+  "description": "Answer economic and financial data questions with real FactIQ data — official data, markets, earnings calls, executive media appearances, and satellite-derived signals including crop fires and wildfires — then return sourced answers, terminal previews, or report JSON.",
   "version": "0.29.0",
   "author": {
     "name": "FactIQ",

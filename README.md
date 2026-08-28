@@ -58,15 +58,16 @@ troubleshooting steps.
 ```
 
 Run **`/reload-plugins`** after installing so Claude Code picks up the new
-skill, MCP server, and command in the current session (otherwise they only
-appear the next time you start Claude Code).
+skill and MCP server in the current session (otherwise they only appear the
+next time you start Claude Code).
 
-This adds the skill (Claude invokes it automatically for economic/financial
-data questions), the bundled FactIQ MCP server, and the `/factiq:ask` command:
+This adds the FactIQ skill (Claude invokes it automatically for
+economic/financial data questions) and the bundled FactIQ MCP server. Claude
+Code namespaces skills installed from plugins, so its manual invocation is:
 
 | Command | Purpose |
 |---|---|
-| `/factiq:ask <question>` | Run a full analysis and get a shareable chart, terminal chart, or report |
+| `/factiq:factiq <question>` | Run an analysis and get a sourced answer, terminal chart, or report |
 
 Finally, authenticate the MCP server:
 
@@ -79,7 +80,7 @@ Finally, authenticate the MCP server:
 <details>
 <summary>Enable auto-updates</summary>
 
-So you always get the latest skill, MCP tools, and commands without
+So you always get the latest skill and MCP tools without
 reinstalling, turn on auto-updates for the marketplace:
 
 1. Run **`/plugin`**.
@@ -147,12 +148,12 @@ Then authorize with `/mcp`.
 Once installed and authenticated, ask a question:
 
 ```
-/factiq:ask How has India's trade deficit with China evolved since 2020?
+/factiq:factiq How has India's trade deficit with China evolved since 2020?
 ```
 
-The agent finds the relevant series, runs the SQL, and replies with a
-shareable factiq.com chart link — or a terminal chart or full report,
-depending on what you ask for. You don't need the slash command: any
+The agent finds the relevant series, runs the SQL, and replies with a sourced
+answer, terminal chart, or full report, depending on what you ask for. You
+don't need the slash command: any
 economic or financial data question in any supported client auto-invokes the
 skill.
 
@@ -247,7 +248,6 @@ Where the behavior lives — the files contributors will touch:
   references: it teaches the dialectical method (thesis → antithesis →
   synthesis) all reports follow and routes each domain to its playbook, so
   adding a playbook doesn't touch SKILL.md
-- `commands/ask.md` — the `/factiq:ask` slash command (Claude Code)
 - `scripts/term_chart.py` — stdlib-only renderer for ANSI/ASCII previews from
   FactIQ ChartSpec and report JSON objects. It supports bar, simple line, and
   table fallback renderers

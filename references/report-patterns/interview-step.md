@@ -1,7 +1,7 @@
 # Explorer-Agent Interview Step
 
-Use this reference before report or dashboard generation when the user's
-request is vague, high stakes, or contains a major unresolved choice. The
+Use this reference before detailed report generation when the user's request
+is vague, high stakes, or contains a major unresolved choice. The
 interview is a short clarification pass run by an explorer agent before data
 fetching and report construction.
 
@@ -18,11 +18,11 @@ method for testing it.
 
 ## Activate When
 
-- The request is broad or underspecified: "analyze", "build a dashboard",
-  "what is happening", "make a report", "compare", or "evaluate".
+- The request is broad or underspecified: "analyze", "what is happening",
+  "make a report", "compare", or "evaluate".
 - Multiple materially different scopes are plausible: geography, sector,
   time window, measure, audience, policy frame, or company universe.
-- A dashboard/report structure depends on a major product choice: KPI set,
+- A report structure depends on a major product choice: KPI set,
   refresh cadence, drilldown depth, chart density, or share/report format.
 - The answer may drive a business, policy, investment, or public-facing
   decision and the success criterion is not stated.
@@ -45,7 +45,7 @@ method for testing it.
 Ask only the questions needed to unblock the work. Prefer 2-4 questions; do
 not turn the interview into a survey.
 
-1. Decision: "What decision or judgment should this report/dashboard support?"
+1. Decision: "What decision or judgment should this report support?"
 2. Audience: "Who is the primary reader, and what do they already know?"
 3. Scope: "Which geography, entities, sectors, and time window should be in
    bounds?"
@@ -64,7 +64,7 @@ Convert the interview result into a compact brief before fetching data:
 - `decision`: the decision or judgment the output must support.
 - `audience`: reader type and required level of explanation.
 - `scope`: geography, entities, sector, metric family, and time window.
-- `output`: report, dashboard, chart pack, or shareable artifact constraints.
+- `output`: quick chart or detailed report constraints.
 - `success_criteria`: what the synthesis must resolve or recommend.
 - `assumptions`: unanswered items and defaults used.
 
