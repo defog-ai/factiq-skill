@@ -9,8 +9,7 @@ executive media appearances, and satellite-derived data (fire detections,
 air-quality activity signals,
 rainfall, nighttime lights, shipping and port activity, reservoir levels).
 The agent discovers series, runs read-only SQL, computes derived metrics, and
-returns a sourced answer, terminal preview, report JSON, or bespoke local HTML
-visualization.
+returns a sourced answer, terminal preview, or report JSON.
 
 No codebase or hosted database is required — only a free
 [FactIQ account](https://factiq.com).
@@ -239,8 +238,8 @@ Where the behavior lives — the files contributors will touch:
   `skills/` directory
 - `references/data/` — the data layer: SQL idioms (`sql-guide.md`) and the
   dataset schema overview (`schemas.md`)
-- `references/output/` — local output formats: ChartSpec (`chart-spec.md`),
-  report JSON (`report-spec.md`), and the bespoke-viz guide (`viz-guide.md`)
+- `references/output/` — local output formats: ChartSpec (`chart-spec.md`) and
+  report JSON (`report-spec.md`)
 - `references/report-patterns/` — domain playbooks (monetary policy,
   bilateral trade, bilateral economic policy, fiscal-policy revenue, business
   formation, earnings intelligence, media-appearance intelligence).
@@ -252,14 +251,6 @@ Where the behavior lives — the files contributors will touch:
 - `scripts/term_chart.py` — stdlib-only renderer for ANSI/ASCII previews from
   FactIQ ChartSpec and report JSON objects. It supports bar, simple line, and
   table fallback renderers
-- `scripts/build_viz.py` — local-only tool that assembles fetched data into a
-  self-contained HTML viz and screenshots it headless for iteration. It never
-  installs Playwright or Chromium unless `--install-deps` is explicitly
-  passed. On the first approved install it creates the dedicated
-  `~/.factiq/viz-venv`, installs the pinned Playwright package there, and
-  downloads Playwright's matching Chromium build; usage in
-  [`references/output/viz-guide.md`](references/output/viz-guide.md)
-- `assets/viz-shell.html` — starting-point shell for bespoke visualizations
 
 Plugin plumbing — you shouldn't need to touch these:
 
@@ -319,8 +310,6 @@ macro-risk snapshots.
 
 - **Terminal renderers** — new chart types or better ASCII/ANSI output in
   `scripts/term_chart.py` (keep it stdlib-only).
-- **Viz recipes** — reusable patterns for `build_viz.py` and
-  `references/output/viz-guide.md`.
 - **SQL idioms and pitfalls** — additions to `references/data/sql-guide.md`
   from real usage.
 - **Docs and fixes** — anything that makes the agent's first attempt land.

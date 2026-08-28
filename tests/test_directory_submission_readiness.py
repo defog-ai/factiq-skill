@@ -8,6 +8,19 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class DirectorySubmissionReadinessTests(unittest.TestCase):
+    def test_readme_names_all_supported_clients_and_canonical_guides(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        for expected in (
+            "Claude (web, desktop, and Cowork)",
+            "ChatGPT Desktop",
+            "https://www.factiq.com/claude",
+            "https://www.factiq.com/chatgpt",
+            "https://www.factiq.com/claude-code",
+            "https://www.factiq.com/codex",
+        ):
+            self.assertIn(expected, readme)
+
     def test_manifests_have_complete_factiq_publisher_metadata(self):
         plugin = json.loads(
             (ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
