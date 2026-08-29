@@ -73,6 +73,13 @@ class EarningsDocumentationContractTests(unittest.TestCase):
         ):
             self.assertIn(field, PLAYBOOK)
 
+    def test_source_labels_name_the_earnings_call_not_the_ingestion_vendor(self):
+        for text in (SKILL_EARNINGS, PLAYBOOK, SCHEMAS_EARNINGS):
+            normalized = " ".join(text.lower().split())
+            self.assertIn("source_link.source_label", normalized)
+            self.assertIn("earnings call transcript", normalized)
+            self.assertIn("ingestion vendor", normalized)
+
     def test_bespoke_tool_cap_never_routes_to_transcript_sql(self):
         cap_guidance = SKILL.split(
             "Every row-returning tool (`run_sql`, `get_series`,", 1

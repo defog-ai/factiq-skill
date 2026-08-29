@@ -129,8 +129,9 @@ marks — the page adds typographic quotes).
 Per-quote fields: `speaker_role` ("CEO", "cfo" — rendered uppercased),
 `affiliation` ("Micron (MU)" or the analyst's firm), `context` (a short
 kicker like "On HBM supply"), `source_label` (the citation line, e.g.
-"MU FY2026Q3 earnings call · Q&A" — compose it from `reporting_ticker`,
-`fiscal_period`, and `section`).
+"Micron (MU) FY2026Q3 earnings call transcript · Q&A" — compose it from the
+company or `reporting_ticker`, `fiscal_period`, and `section`, never the
+ingestion vendor).
 
 ```json
 {
@@ -144,7 +145,7 @@ kicker like "On HBM supply"), `source_label` (the citation line, e.g.
       "speaker_role": "cfo",
       "affiliation": "Micron (MU)",
       "context": "On record cash flow",
-      "source_label": "MU FY2026Q3 earnings call · Q&A"
+      "source_label": "Micron (MU) FY2026Q3 earnings call transcript · Q&A"
     }
   ],
   "sources": [{ "name": "FactIQ earnings-transcript intelligence", "type": "database" }]
