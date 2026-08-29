@@ -94,8 +94,11 @@ sub-word variants. This is lexical, not semantic retrieval:
    panels for the load-bearing verbatim statements → verification charts →
    watch-list from the refusals. State the pinned fiscal period, coverage
    window, and whether either bounded browse hit 50 rows. Put each used row's
-   provided `source_link.source_url` beside its quote as a Markdown link; if it
-   is null, state that the direct transcript link is unavailable.
+   provided `source_link.source_url` beside its quote as a Markdown link, using
+   `source_link.source_label` as the link text; if it is null, state that the
+   direct transcript link is unavailable. The label must identify the company
+   or ticker, fiscal period, and earnings call transcript—not an ingestion
+   vendor.
 
 ### 2. Claim-vs-data verification (the FactIQ edge)
 
@@ -205,9 +208,11 @@ quote-filled text panels.
 - Only `verbatim_quote` may appear in quotation marks or quote panels.
   `canonical_statement` is normalized content for synthesis, not a quotation.
 - Put the exact row's provided source URL beside every quote or filing-backed
-  figure. Do not make another tool call just to find the citation, reconstruct
-  a URL, or substitute a related press release. A document-precision URL is
-  not an exact-context link. When `source_url` is null, say it is unavailable.
+  figure, using its provided source label as the Markdown link text. Do not
+  replace the evidence label with an ingestion vendor, make another tool call
+  just to find the citation, reconstruct a URL, or substitute a related press
+  release. A document-precision URL is not an exact-context link. When
+  `source_url` is null, say it is unavailable.
 - Retrieval is lexical. A broad/partial hit is not proof of the full theme,
   and an empty result is not proof of silence — inspect rows, sweep the
   company's own vocabulary, and report the coverage boundary.
