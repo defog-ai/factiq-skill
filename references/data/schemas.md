@@ -211,7 +211,8 @@ another dataset, or splitting day passes from night passes.
   nasa_fires schema" above)
 - Company-specific: quotes, price history, and company/ETF profiles →
   `get_market_data`; filed financials, segment/product/geography detail,
-  forward guidance, or operating KPIs (ARR, RevPAR, ...) →
+  forward guidance, operating KPIs (ARR, RevPAR, ...), year-over-year
+  risk-factor changes, or management's MD&A/press-release commentary →
   `search_company_filings`; what management said live on a call →
   `search_earnings_transcripts` (not SQL)
 - What executives said in podcasts, television interviews, and conferences
