@@ -140,8 +140,9 @@ can't find the national aggregate, say so rather than substituting.
 
 A row offset equals a period offset only when every period is present. Series
 have holes: a month the source never published, a quarter outside the
-requested window, a period a WHERE clause removed. After a hole,
-`LAG(value, 12)` compares each month with the month **thirteen** periods back,
+requested window, a period a WHERE clause removed. For the twelve rows after
+a hole, `LAG(value, 12)` compares each month with the month **thirteen**
+periods back (`LEAD(value, 12)` does the same for the twelve rows before it),
 the numbers stay plausible, and nothing errors.
 
 Bad — silently wrong after any gap:
