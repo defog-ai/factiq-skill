@@ -595,8 +595,9 @@ which is also all it needs.
   `missing_periods` (a month the source never published, or one the query
   window cut off). Any period-over-period figure built with a fixed row
   offset (`LAG(value, 12)`, `shift(12)`, "the row 12 back") over those rows
-  is wrong from the first gap onward. Recompute by matching dates, name the
-  missing periods in the answer, and label partial aggregates as partial.
+  is wrong for the 12 rows after each gap (a forward offset: the 12 rows
+  before it). Recompute by matching dates, name the missing periods in the
+  answer, and label partial aggregates as partial.
 - **SQL timeout** — statements are capped at 30s. Filter on indexed columns
   (`series_id`, `dataset_code`) instead of scanning titles, and never
   pattern-match `series_id` on `data_points` — resolve ids from `series` first
