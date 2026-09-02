@@ -15,6 +15,7 @@ CHART_SPEC = (ROOT / "references/output/chart-spec.md").read_text(encoding="utf-
 REPORT_RULES = (ROOT / "references/report-patterns/README.md").read_text(
     encoding="utf-8"
 )
+JOIN = "date_trunc('month', prior.time) = date_trunc('month', cur.time) - interval '1 year'"
 YOY_TRAP = SQL_GUIDE.split("## Year-over-year on monthly data", 1)[1].split(
     "## HS trade datasets", 1
 )[0]
@@ -32,15 +33,21 @@ class PeriodAlignmentDocumentationTests(unittest.TestCase):
         conventions = SQL_GUIDE.split("## Always-true conventions", 1)[1].split(
             "\n## ", 1
         )[0]
-        self.assertIn("`data_points.time` is the period start", conventions)
-        self.assertIn("interval '1 year'", conventions)
+        self.assertIn(
+            "**Match periods on the calendar month, never on the exact date.**",
+            conventions,
+        )
+        self.assertIn(JOIN, conventions)
 
     def test_sql_guide_trap_shows_lag_as_bad_and_date_join_as_good(self):
         bad, good = YOY_TRAP.split("Good", 1)
         self.assertIn("Bad", bad)
         self.assertIn("LAG(value, 12) OVER (ORDER BY time)", bad)
-        self.assertIn("prior.time = cur.time - interval '1 year'", good)
+        self.assertIn(JOIN, good)
+        self.assertNotIn("prior.time = cur.time - interval", good)
+        self.assertIn("date_trunc('quarter', ...)", good)
         self.assertIn("generate_series(", good)
+        self.assertIn("ON date_trunc('month', d.time) = s.time", good)
         self.assertIn('transform="yoy_pct"', good)
         self.assertIn("series_math.py yoy", good)
 
@@ -70,6 +77,8 @@ class PeriodAlignmentDocumentationTests(unittest.TestCase):
             "\n5. ", 1
         )[0]
         self.assertIn("matched by date", compute_step)
+        self.assertIn(JOIN, compute_step)
+        self.assertIn("never compare exact", compute_step)
         self.assertIn("never `LAG(value, 12)`", compute_step)
         self.assertIn("`missing_periods`", compute_step)
         template = SKILL.split("You are a FactIQ research agent", 1)[1].split(

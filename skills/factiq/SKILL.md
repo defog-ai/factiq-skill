@@ -340,9 +340,11 @@ previews.
    Year-over-year is the same period one year earlier, **matched by date**,
    never by row position: for one series use `get_series` with
    `transform="yoy_pct"` (or `"yoy_diff"` for a rate); for several series or a
-   merged table use `series_math.py yoy`; in SQL join on
-   `prior.time = cur.time - interval '1 year'`, never `LAG(value, 12)` (see the
-   trap in `references/data/sql-guide.md`). When a tool result carries a
+   merged table use `series_math.py yoy`; in SQL join on the calendar month
+   (`date_trunc('month', prior.time) = date_trunc('month', cur.time) - interval '1 year'`
+   — the stored day of the month varies by source, so never compare exact
+   dates), never `LAG(value, 12)` (see the trap in
+   `references/data/sql-guide.md`). When a tool result carries a
    `coverage_note`, the rows skip the periods in `missing_periods`: name them
    in the answer, do not interpolate, and label any aggregate that spans them
    as partial ("Q4 2025 average of two months").
@@ -424,7 +426,8 @@ Constraints: every tool result is capped at 50 rows, so aggregate in SQL to
 the grain the finding needs; compute derived metrics (YoY, ratios, indices)
 yourself from the fetched values. Year-over-year is the same period one year
 earlier matched by date (get_series with transform="yoy_pct", series_math.py
-yoy, or an exact-date SQL join), never a 12-row offset. Report any
+yoy, or a SQL join on date_trunc('month', time)), never a 12-row offset or an
+exact-date comparison. Report any
 coverage_note / missing_periods from the tool results in your findings.
 
 Return your findings as a structured block:
