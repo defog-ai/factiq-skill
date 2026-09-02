@@ -32,10 +32,12 @@ The `get_data_catalog` tool returns the full DDL.
   `'annual'`, `'weekly'`, `'semiannual'`. `frequency = 'Monthly'` matches
   nothing.
 - **`dataset_code` is lowercase** — use ILIKE or lowercase literals.
-- **`data_points.time` is the period start**: a monthly observation is stored
-  on the first of its month, a quarterly one on the first day of its quarter.
-  `time - interval '1 year'` and `time - interval '1 month'` therefore land
-  exactly on the prior period's stored date.
+- **Match periods on the calendar month, never on the exact date.** The day
+  stored inside `data_points.time` varies by source: most store the first day
+  of the period, some store the last day (quarter-end or fiscal-year-end
+  dates). Join and compare on `date_trunc('month', time)` (or
+  `date_trunc('quarter', time)` for quarterly series):
+  `date_trunc('month', prior.time) = date_trunc('month', cur.time) - interval '1 year'`.
 - The server rewrites `series_title` to
   `COALESCE(human_friendly_title, series_title)` automatically, normalizes
   frequency filters, and turns `data_points.series_id` pattern filters into
@@ -147,8 +149,11 @@ WHERE series_id = 'CUUR0000SA0' AND time >= '2019-01-01'
 ORDER BY time
 ```
 
-Good — join on the exact date, so a missing prior period gives no row (or a
-null with a LEFT JOIN) instead of a wrong number:
+Good — join on the calendar month, so a missing prior period gives no row (or
+a null with a LEFT JOIN) instead of a wrong number. Compare
+`date_trunc('month', time)`, not `time` itself: the stored day of the month
+differs between sources (first of the month for most, last day of the period
+for some), and an exact-date join silently finds nothing for those.
 
 ```sql
 SELECT cur.time,
@@ -156,10 +161,13 @@ SELECT cur.time,
 FROM data_points cur
 JOIN data_points prior
   ON prior.series_id = cur.series_id
- AND prior.time = cur.time - interval '1 year'
+ AND date_trunc('month', prior.time) = date_trunc('month', cur.time) - interval '1 year'
 WHERE cur.series_id = 'CUUR0000SA0' AND cur.time >= '2020-01-01'
 ORDER BY cur.time
 ```
+
+For quarterly series use `date_trunc('quarter', ...)` on both sides; for
+month-over-month subtract `interval '1 month'`.
 
 Also good — build a complete date spine first; on a spine every period has a
 row, so a row offset is a period offset and LAG is correct:
@@ -171,7 +179,8 @@ WITH spine AS (
 cpi AS (
   SELECT s.time, d.value
   FROM spine s
-  LEFT JOIN data_points d ON d.time = s.time AND d.series_id = 'CUUR0000SA0'
+  LEFT JOIN data_points d
+    ON date_trunc('month', d.time) = s.time AND d.series_id = 'CUUR0000SA0'
 )
 SELECT time, value, 100 * (value / LAG(value, 12) OVER (ORDER BY time) - 1) AS yoy_pct
 FROM cpi WHERE time >= '2020-01-01' ORDER BY time
