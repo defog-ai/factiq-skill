@@ -34,9 +34,13 @@ The `get_data_catalog` tool returns the full DDL.
 - **`dataset_code` is lowercase** — use ILIKE or lowercase literals.
 - **Match periods on the calendar month, never on the exact date.** The day
   stored inside `data_points.time` varies by source: most store the first day
-  of the period, some store the last day (quarter-end or fiscal-year-end
-  dates). Join and compare on `date_trunc('month', time)` (or
-  `date_trunc('quarter', time)` for quarterly series):
+  of the period, but `frb`, `rbi`, `fhfa` and `treasury` store monthly values
+  on the last day of the month (`2025-02-28`, `2025-03-31`), and `frb`, `rbi`,
+  `fhfa` and `cbo` store quarters on quarter-end dates. An exact-date join
+  such as `prior.time = cur.time - interval '1 year'` finds nothing for those
+  (February 29 minus one year is February 28). Join and compare on
+  `date_trunc('month', time)` (or `date_trunc('quarter', time)` for quarterly
+  series):
   `date_trunc('month', prior.time) = date_trunc('month', cur.time) - interval '1 year'`.
 - The server rewrites `series_title` to
   `COALESCE(human_friendly_title, series_title)` automatically, normalizes
