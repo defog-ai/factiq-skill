@@ -209,7 +209,10 @@ quote-filled text panels.
 
 - `assertion_status` is load-bearing: `analyst_hypothesized` belongs to the
   analyst; `mgmt_declined_to_confirm` is a refusal, and often the finding.
-- Only `verbatim_quote` may appear in quotation marks or quote panels.
+- Only `verbatim_quote` may appear in quotation marks or quote panels. A
+  `[…]` inside it marks omitted transcript sentences between non-adjacent
+  evidence spans; keep the marker exactly as returned and never close the gap
+  into one continuous sentence.
   `canonical_statement` is normalized content for synthesis, not a quotation.
 - Put the exact row's provided source URL beside every quote or filing-backed
   figure, using its provided source label as the Markdown link text. Do not
