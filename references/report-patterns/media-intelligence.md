@@ -52,10 +52,6 @@ Use the six canonical `search_target` values:
 `pressure_points` is not a complete map of interviewer questions or every
 Q&A exchange. It contains the structured refusal/declined-to-confirm subset.
 
-Compatibility aliases remain available for old clients: `all` maps to
-`search`, `videos` to `appearances`, and `companies` to `coverage`.
-Do not use these aliases in new examples.
-
 The public shapes differ:
 
 - `search`, `claims`, `passages`, and `pressure_points` return
@@ -66,14 +62,13 @@ The public shapes differ:
   primary ticker, attribution fields, matching-claim count, URL, and relevance.
 - `coverage` returns company-level appearance count, publication-date span,
   covered channels, structured-claim count, and low-confidence-attribution count.
-  It is not the old per-person acquired-video/hour inventory.
 
 ## Parameters and Applicability
 
 | Parameter | Guidance |
 |---|---|
 | `query` | Concise lexical topic. Empty strings browse according to the target table above |
-| `search_target` | One of the six canonical values; aliases are compatibility-only |
+| `search_target` | One of the six values in the table above |
 | `company_filter` | Comma-separated exact primary tickers for structured findings; catalog targets also match exact stored entity-reference tokens |
 | `person` | Case-insensitive name substring over finding and/or appearance speaker metadata |
 | `sort` | `relevance` (default) or `newest`, with the exact ordering described above |

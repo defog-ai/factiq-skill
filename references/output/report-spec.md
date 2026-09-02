@@ -36,15 +36,16 @@ model name.
   `narrative` and `charts` are optional per section, but the report as a
   whole needs **at least one data chart** (text panels don't count toward
   that minimum) and at most **16 charts total**.
-- `narrative` — **plain text, no markdown**: the report page renders it
-  verbatim, so `**bold**` shows literal asterisks. ≤30,000 chars.
+- `narrative` — **plain text, no markdown**: the FactIQ report format
+  renders narrative verbatim, so `**bold**` shows literal asterisks.
+  ≤30,000 chars.
 
 ## Charts
 
-`chart_type`: `line | bar | table | text | bubble | small_multiples |
-stacked_area | map | heatmap`. **Stick to `line`, `bar`, `table`, and
-`text`** — the first three take the simple tabular format below, and `text`
-is the prose panel documented after it. The other types pass through with the
+`chart_type`: `line | bar | table | text | quote | bubble | small_multiples |
+stacked_area | map | heatmap`. **Stick to `line`, `bar`, `table`, `text`, and
+`quote`** — the first three take the simple tabular format below; `text` and
+`quote` are the prose and quote panels documented after it. The other types pass through with the
 in-house agent's full hydrated config structure, which is not documented
 here. For a geographic finding, build a separate ChartSpec map using
 `references/output/chart-spec.md` and reference its local path in the narrative.
@@ -71,13 +72,11 @@ ascending — some endpoints return reverse-chronological rows, which would
 render a backwards x-axis. Use `null` for gaps; don't drop rows. More than
 ~300 points per line renders slowly — thin to monthly/quarterly first.
 
-For table or data-excerpt row granularity, match the rows to the question and
-time window. Monthly rows can be sensible for shorter multi-year windows,
-roughly up to 3-5 years, when timing, seasonality, or turning points matter.
-For longer windows, especially 5+ years, monthly rows often make tables too
-noisy; usually summarize with annual totals, YTD comparisons, latest/prior
-snapshots, or selected turning points instead. Do not default categorically to
-monthly or yearly rows.
+Match table and data-excerpt granularity to the question and window: monthly
+rows suit shorter multi-year windows (roughly up to 3–5 years) where timing,
+seasonality, or turning points matter; over longer windows, summarize with
+annual totals, YTD comparisons, latest/prior snapshots, or selected turning
+points so the table stays readable.
 
 ### Text panels
 
@@ -182,8 +181,7 @@ Same DAG format as ChartSpec lineage (see `references/output/chart-spec.md` —
 nodes with `id`, `type`, `title`, `summary`, `detail`, `inputs`, optional
 `code`/`code_language`/`series_refs`, exactly one `output` node referenced
 by `root_id`). Record the SQL and computations you actually ran. A chart
-uploaded without `lineage` gets a one-node "uploaded chart data" stub, so
-the panel still renders — but says nothing useful.
+without `lineage` leaves no record of how its numbers were produced.
 
 Two rules carry over from chart-spec lineage and are worth repeating
 because reports get them wrong most often:
@@ -194,7 +192,7 @@ because reports get them wrong most often:
   script lines you ran, not a one-line paraphrase.
 - `series_refs` lists **every** series the step used (each id in the
   query's `IN (...)` list or filter, with its real title), not a single
-  representative one. Each ref renders as a clickable series link. For
+  representative one. Each ref identifies one series a reader can look up. For
   very large aggregates (40+ series), list the largest contributors and
   state the full count in `summary`.
 
@@ -209,7 +207,7 @@ per narrative, and 5,000 characters for the summary.
 ```json
 {
   "question": "How has US unemployment evolved since 2022?",
-  "model": "claude-sonnet-4-6 (factiq-skill)",
+  "model": "<your model id> (factiq-skill)",
   "report": {
     "summary": "US unemployment climbed from a 54-year low of 3.4% in April 2023 to 4.2% by late 2024, but the rise reflects labor-force re-entry rather than layoffs. Job openings cooled without a spike in claims.",
     "sections": [

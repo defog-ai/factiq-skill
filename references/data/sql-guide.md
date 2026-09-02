@@ -77,23 +77,21 @@ Prefer filtering on indexed columns (`series_id`, `dataset_code`) over text
 scans. For text searches use two steps: find series_ids first, then fetch
 their data.
 
-## Never pattern-match `series_id` on `data_points`
+## Pattern-matching `series_id` on `data_points`
 
-`data_points` is enormous and its index does not serve LIKE/ILIKE — even an
-anchored pattern (`series_id LIKE 'us\_census\_hs\_M\_10d\_280530%'`) scans
-the whole table and dies at the 30s timeout. The same pattern against the
-small `series` catalog is fast. (Exception: the Eurostat Comext country
-catalogs are not small — millions of series each — and their text collation
-defeats prefix-index use entirely; never pattern-scan `series_id` there. See
-the Comext section below.)
-
-The server rewrites WHERE-clause LIKE/ILIKE on `data_points.series_id` into
-`series_id IN (SELECT series_id FROM series WHERE ...)` automatically (the
-response's `transformed_query` shows it), so those queries now run via the
-index. But the rewrite covers WHERE clauses only — a pattern inside a
-projection (`SUM(CASE WHEN series_id LIKE '%\_5700' THEN value END)`) is
-untouched, and is fine *only if* the WHERE clause already narrows the rows.
-When in doubt, resolve ids explicitly first:
+`data_points` is enormous and its index does not serve LIKE/ILIKE; an
+unindexed pattern scan of it dies at the 30s timeout. The server covers one
+case for you: a LIKE/ILIKE on `data_points.series_id` in a WHERE clause is
+rewritten into `series_id IN (SELECT series_id FROM series WHERE ...)` (the
+response's `transformed_query` shows it), so it runs through the index. The
+rewrite covers WHERE clauses only — a pattern inside a projection
+(`SUM(CASE WHEN series_id LIKE '%\_5700' THEN value END)`) is untouched, and
+is fine *only if* the WHERE clause already narrows the rows. The same pattern
+against the small `series` catalog is always fast. (Exception: the Eurostat
+Comext country catalogs are not small — millions of series each — and their
+text collation defeats prefix-index use entirely; never pattern-scan
+`series_id` there. See the Comext section below.) When in doubt, resolve ids
+explicitly first:
 
 ```sql
 -- Step 1 (fast): resolve the id list on the catalog
