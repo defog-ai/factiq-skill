@@ -7,7 +7,9 @@ Use this instead of computing growth rates, shares, or unit conversions in
 your own tokens: the script's arithmetic is exact and repeatable.
 
 Subcommands:
-  yoy      year-over-year % change (same month/quarter, previous year)
+  yoy      year-over-year % change (same month/quarter of the previous year,
+           matched by date — a missing period gives a blank, never a shifted
+           comparison; periods with no prior-year value are listed on stderr)
   ytd      calendar year-to-date cumulative total + YoY % vs prior-year YTD
   share    each group's % share of the per-period total (needs --group-col)
   index    rebase each group to 100 at one YYYY, YYYY-Qn, or YYYY-MM period
@@ -296,19 +298,34 @@ def cmd_yoy(args) -> None:
     columns, rows = load_table(args.file)
     groups, _ = split_rows(args, columns, rows)
     out = []
+    without_prior: list[str] = []
     with localcontext() as context:
         context.prec = arithmetic_precision(groups)
         for key, series in sorted(groups.items()):
             prior = {(y, m): v for y, m, _, v in series}
+            first_year = min(y for y, _, _, _ in series)
             for y, m, t, v in series:
                 prev = prior.get((y - 1, m))
                 pct = (v / prev - 1) * 100 if prev not in (None, 0) else None
+                if (y - 1, m) not in prior and y > first_year:
+                    # The first year has no prior by construction; a later
+                    # blank means the prior-year period is missing from the
+                    # payload, which the caller must disclose.
+                    without_prior.append(f"{key}: {t}" if args.group_col else str(t))
                 out.append(
                     ([key] if args.group_col else [])
                     + [t, v, "" if pct is None else round(pct, 4)]
                 )
     header = ([args.group_col] if args.group_col else []) + ["time", "value", "yoy_pct"]
     emit(header, out)
+    if without_prior:
+        print(
+            "note: no prior-year observation for "
+            + ", ".join(without_prior)
+            + " — yoy_pct is blank there; say so in the answer rather than "
+            "interpolating or comparing with a different period",
+            file=sys.stderr,
+        )
 
 
 def cmd_ytd(args) -> None:

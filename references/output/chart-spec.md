@@ -142,8 +142,8 @@ single `output` node:
     {
       "id": "calc", "type": "code", "inputs": ["sql1"],
       "title": "Computed YoY change",
-      "summary": "12-month difference on the monthly rate",
-      "detail": "", "code": "yoy = rate - rate.shift(12)", "code_language": "python"
+      "summary": "Same month one year earlier, matched by date, never a 12-row shift",
+      "detail": "", "code": "python3 series_math.py yoy --file rates.json --group-col series_id", "code_language": "bash"
     },
     {
       "id": "out", "type": "output", "inputs": ["calc"],
