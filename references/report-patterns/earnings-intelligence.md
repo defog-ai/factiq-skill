@@ -1,8 +1,9 @@
 # Earnings-Intelligence Report Pattern
 
 Company and earnings analysis from what management said live
-(`search_earnings_transcripts`), what the company filed (`sec` schema), what
-it formally guided (`sec_guidance`), how the market priced it
+(`search_earnings_transcripts`), what the company filed
+(`search_company_filings`, or `run_sql` on the `filings` schema), what it
+formally guided (`sec_guidance`), how the market priced it
 (`get_market_data`), and — FactIQ's edge — whether the macro data agrees.
 
 The dialectic here: the **thesis** is the story management tells on the call
@@ -26,9 +27,9 @@ consistent with the data", "who mentioned <theme> this quarter".
 `company_filter` when the question names companies. Treat its live
 `calls_covered`, `earliest_period`, `latest_period`, and `latest_call_date` as
 the authoritative coverage window; do not rely on a static assumption about
-how many calls exist. If a ticker is not covered, say so and fall back to the
-`sec` schema plus `get_market_data`; never silently substitute filed data for
-spoken remarks.
+how many calls exist. If a ticker is not covered, say so and fall back to
+`search_company_filings` plus `get_market_data`; never silently substitute
+filed data for spoken remarks.
 An uncovered period, an empty lexical result, or a partial result is never
 evidence management did not discuss a topic.
 
@@ -86,8 +87,9 @@ sub-word variants. This is lexical, not semantic retrieval:
    lookup of what this company routinely breaks out vs. withholds, so you can
    flag anything volunteered off-pattern.
 5. Antithesis pass: pair the 3–5 most checkable claims with filed data —
-   `sec` XBRL for actuals, `sec_kpi` for operating metrics, `sec_guidance`
-   for the formal targets — and the call-window price move
+   filed XBRL actuals, `sec_kpi` operating metrics, and `sec_guidance`
+   formal targets, all through `search_company_filings` — and the
+   call-window price move
    (`get_market_data` with `data_type="price_history"`,
    `frequency="daily"`, and a deliberate `limit`).
 6. Report: summary (the synthesis, not a recap) → guidance table → quote
@@ -181,8 +183,10 @@ used at all.
 ## Data Source Ladder
 
 1. `search_earnings_transcripts` — spoken claims, Q&A, disclosure habits.
-2. `sec` via `run_sql` — filed XBRL segment/product/geo detail, `sec_guidance`
-   formal targets, `sec_kpi` operating metrics.
+2. `search_company_filings` — filed XBRL segment/product/geo detail,
+   `sec_guidance` formal targets, `sec_kpi` operating metrics. For joins or
+   aggregations across companies, `run_sql` on the `filings` schema (see
+   `references/data/schemas.md`); not the frozen `sec.*` SQL tables.
 3. `get_market_data` — quotes, company/ETF profiles, and price history for
    reaction windows.
 4. Macro schemas (`bls`/`census`/`eia`/`frb`/trade/`policy`) — the
