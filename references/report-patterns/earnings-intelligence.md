@@ -186,7 +186,7 @@ used at all.
 2. `search_company_filings` — filed XBRL segment/product/geo detail,
    `sec_guidance` formal targets, `sec_kpi` operating metrics. For joins or
    aggregations across companies, `run_sql` on the `filings` schema (see
-   `references/data/schemas.md`); not the frozen `sec.*` SQL tables.
+   `references/data/schemas.md`).
 3. `get_market_data` — quotes, company/ETF profiles, and price history for
    reaction windows.
 4. Macro schemas (`bls`/`census`/`eia`/`frb`/trade/`policy`) — the
