@@ -312,6 +312,42 @@ them transparently (returns columns + results like a timeseries) — prefer it.
 For direct SQL: `row_data->>'column_name'` extracts text; cast with `::numeric`
 for math.
 
+## Period-over-period changes: join on the date, never on the row
+
+`LAG(value, 12) OVER (ORDER BY time)` steps back twelve **rows**, not twelve
+**months**. Government series skip periods (BLS published no October 2025 CPI
+or unemployment rate), and from the first hole on a row offset compares the
+wrong periods while still returning plausible numbers. The server rejects a
+LAG/LEAD statement whose series has a hole inside the statement's window and
+tells you which period is missing. Write the comparison as an exact-date
+self-join instead:
+
+```sql
+WITH cur AS (
+  SELECT series_id, time, value FROM data_points
+  WHERE series_id IN ('CUUR0000SA0') AND time >= '2019-01-01'
+)
+SELECT c.series_id, c.time, 100 * (c.value / p.value - 1) AS yoy_pct
+FROM cur c
+JOIN cur p ON p.series_id = c.series_id
+          AND p.time = c.time - interval '1 year'   -- '1 month' for MoM, '3 months' for QoQ
+ORDER BY c.series_id, c.time
+```
+
+Periods with no prior-year observation drop out instead of shifting. The same
+rule applies to local computation: `series.shift(12)` on a pandas Series is a
+row offset too; shift by a date offset or reindex to a complete monthly
+calendar first.
+
+Every `get_series` and `run_sql` result that touches a monthly, quarterly, or
+annual series with a hole carries `missing_periods` (per series id, with the
+period labels) and a `missing_periods_note`. When it is present: say which
+periods are missing in the answer, and label any aggregate that spans one as
+partial (a Q4 2025 average built from November and December is a two-month
+average, not a quarter). If you need a row per calendar period regardless,
+build the calendar with `generate_series` and LEFT JOIN the observations onto
+it; a row offset over that scaffold is aligned, and the server only warns.
+
 ## Efficiency
 
 - Most questions need 2–4 data calls. Batch independent fetches in one turn.

@@ -326,11 +326,20 @@ previews.
    default categorically to monthly or yearly rows.
 4. **Compute deterministically.** For YoY/YTD growth, shares, rebasing, or
    merging compatible results, save the fetched `columns` and `results` as a
-   local FactIQ payload and use `series_math.py`. Never inspect Claude/Codex
-   transcripts or session directories to recover tool results. For other
-   metrics such as per-capita values or custom ratios, write a small local
-   Python calculation on the fetched values. There is no server-side code
-   interpreter in this loop.
+   local FactIQ payload and use `series_math.py`. It matches each period to
+   the same month or quarter of the prior year by calendar date, which is why
+   it beats `LAG(value, 12) OVER (ORDER BY time)` in SQL or pandas
+   `.shift(12)`: those are row offsets, and one missing observation (BLS
+   published no October 2025 CPI or unemployment rate) makes every later row
+   compare the wrong months while still looking plausible. `run_sql` rejects
+   such a statement over a series with a hole; if you must do it in SQL, join
+   on `p.time = c.time - interval '1 year'`. When a result carries
+   `missing_periods`, name those periods in the answer and mark any aggregate
+   that spans one as partial (a Q4 built from November and December is a
+   two-month average). Never inspect Claude/Codex transcripts or session
+   directories to recover tool results. For other metrics such as per-capita
+   values or custom ratios, write a small local Python calculation on the
+   fetched values. There is no server-side code interpreter in this loop.
 5. **Recent market data.** The DB lags for very recent market/price data — use
    `get_market_data` for current quotes, commodities, and FX. For what the
    news is saying about a company, sector, or economy right now, use
@@ -409,7 +418,9 @@ Steps:
 1. search_datasets / describe_dataset / search_series to find the right series.
 2. Fetch data with get_series or run_sql. Aggregate in SQL to stay under the
    50-row cap.
-3. Compute derived metrics (YoY, ratios, indices) yourself.
+3. Compute derived metrics (YoY, ratios, indices) yourself: YoY with
+   `series_math.py` or an exact-date join, never a row offset. Carry any
+   `missing_periods` from the results into your findings.
 4. Return your findings as a structured block:
 
 FINDINGS:

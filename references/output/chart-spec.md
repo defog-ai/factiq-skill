@@ -143,8 +143,8 @@ SQL, computations — ending in a single `output` node:
     {
       "id": "calc", "type": "code", "inputs": ["sql1"],
       "title": "Computed YoY change",
-      "summary": "12-month difference on the monthly rate",
-      "detail": "", "code": "yoy = rate - rate.shift(12)", "code_language": "python"
+      "summary": "12-month difference on the monthly rate, matched by calendar month (a row shift misaligns after a missing month)",
+      "detail": "", "code": "yoy = rate - rate.reindex(rate.index - pd.DateOffset(years=1)).values", "code_language": "python"
     },
     {
       "id": "out", "type": "output", "inputs": ["calc"],
