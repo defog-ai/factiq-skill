@@ -103,7 +103,7 @@ All FactIQ tools are MCP tools provided by the `factiq` MCP server.
 | `describe_dataset` (`schema`, `dataset_code`) | Full metadata for one dataset: topic, methodology, release dates, base-change notice, dimensions, example series. Call after `search_datasets`. |
 | `search_series` (`schema`, `terms`, `limit?`, `include_compound?`) | Series-level title-substring search within one schema (`terms` is a list — prefer short stems). Includes `COMPOUND::` series. |
 | `run_sql` (`schema`, `sql`, `question?`, `explore?`, `auto_retry?`, `page?`) | Read-only SELECT against one schema. The power tool for joins, pivots, aggregation. `page` works on the `nasa_fires` schema only, where individual rows are the answer; everywhere else, aggregate. |
-| `get_series` (`schema`, `series_id`, `from_year?`, `to_year?`) | Fetch one series — timeseries, tabular, or `COMPOUND::` ids all work. SEC-backed results include `row_sources` keyed by `result_index`, with the supporting filing, accession/form/date, reported-vs-derived status, and a standardized `source_link`. |
+| `get_series` (`schema`, `series_id`, `from_year?`, `to_year?`, `transform?`) | Fetch one series — timeseries, tabular, or `COMPOUND::` ids all work. `transform="yoy_pct"` (percent change) or `"yoy_diff"` (difference, for rates) adds a column with the change versus the same period one year earlier, matched by calendar date; the cell is null where that period is absent. A `coverage_note` with `missing_periods` means the series skips a period — disclose it. SEC-backed results include `row_sources` keyed by `result_index`, with the supporting filing, accession/form/date, reported-vs-derived status, and a standardized `source_link`. |
 | `get_market_data` (`asset`, `data_type?`, `frequency?`, `limit?`) | Provider-neutral quotes, daily/weekly/monthly price history, company and ETF profiles, symbol search, FX, and commodities. `data_type` is `price_history`, `quote`, `company_profile`, `etf_profile`, or `symbol_search`; `limit` is 1–5,000. |
 | `get_geo_data` (`dataset`, `region`, `start_date`, `end_date`, `aggregation?`, `resolution?`, `include_flares?`) | Satellite-derived signals: `fires_viirs` (crop burning/wildfires; every detection since 2012 is held in FactIQ's own database, so calls answer in under a second — `aggregation="seasons"` compares the same calendar window in every year since 2012 in one call, `"grid"` maps the footprint at a cell size you pick with `resolution`, `"points"` returns exact detection coordinates), `no2_tropomi` / `so2_tropomi` / `co_tropomi` (industrial, coal/smelting, and combustion activity), `aerosol_index_tropomi` (smoke/dust/haze), `ndvi_s2` (crop condition) — these five also accept `aggregation="grid"` for a cell-by-cell spatial snapshot — `precip_chirps` (0.05° gauge-calibrated rainfall within 50S-50N), `precip_imerg` (0.1° global rainfall), `temperature_power`, `soil_moisture_power` — aggregated over a country, state (`"India/Punjab"`), or bbox. `resolution` and `include_flares` apply to `fires_viirs` only; gas flares and other permanent industrial heat are excluded unless you ask for them. **Read `references/data/satellite.md` before first use** — it covers windows (50 intervals, 200 for fires; grid/points 92 days, 366 for fires), the `valid_obs_share` rule, and attribution. For fire questions this tool does not cover, query the `nasa_fires` SQL schema (`references/data/schemas.md`). |
 | `search_company_filings` (`company`, `query?`, `concept?`, `search_target?`, `report_type?`, `fiscal_year?`, `fiscal_period?`, `metric_class?`, `segment?`, `date_from?`, `date_to?`, `active_only?`, `format?`, `limit?`) | The central tool for company filings. Deterministic (no model) search over the structured facts and report metadata in one company's filed reports, for every company FactIQ covers: US SEC filers (10-K, 10-Q, 8-K, plus 20-F/40-F/6-K for foreign filers) and companies listed in Germany (annual, half-year, Q1, and Q3 reports, values in EUR — e.g. `company="BAS"` for BASF SE). Use an exact ticker; a share-class sibling (GOOGL for GOOG) resolves to the same filer, a German company resolves by its German ticker, full name, or LEI, and an ambiguous name comes back with `possible_matches`. Start with `search_target="coverage"` to see which report types, periods, and metric classes exist. Then set `concept` to one metric name (`"revenue"`, `"net income"`) to get that concept's values across periods, or use `search_target="metrics"` to list stored concepts and `"facts"` for reported values. `query` is a lexical text search across concept names, source labels, aliases, and segment names; narrow with `metric_class` (`financial`, `ifrs`, `segment`, `geography`, `product`, `kpi`, `apm`, `guidance`), `segment`, `report_type` (`annual`, `quarterly`, `half_year`, `10-K`, `10-Q`), `fiscal_year` + `fiscal_period` (`2025`, `Q3`), or `date_from`/`date_to`. Every result is a tree: company → metric class → concept → series → period. With `format="json"`, filing/fact nodes retain the report URL and add a standardized `source_link`; exact-ticker metrics/facts misses may fall back to standardized statements with no filing evidence. `format="pretty"` returns a rendered text tree instead of JSON. When a company reports the same concept twice in one filing, the second copy is labeled "Reported line 2" — never add it to the first. Results stop at `limit` (max 50) with `truncated: true`; narrow the filters rather than paging. |
@@ -337,6 +337,15 @@ previews.
    metrics such as per-capita values or custom ratios, write a small local
    Python calculation on the fetched values. There is no server-side code
    interpreter in this loop.
+   Year-over-year is the same period one year earlier, **matched by date**,
+   never by row position: for one series use `get_series` with
+   `transform="yoy_pct"` (or `"yoy_diff"` for a rate); for several series or a
+   merged table use `series_math.py yoy`; in SQL join on
+   `prior.time = cur.time - interval '1 year'`, never `LAG(value, 12)` (see the
+   trap in `references/data/sql-guide.md`). When a tool result carries a
+   `coverage_note`, the rows skip the periods in `missing_periods`: name them
+   in the answer, do not interpolate, and label any aggregate that spans them
+   as partial ("Q4 2025 average of two months").
 5. **Recent market data.** The DB lags for very recent market/price data — use
    `get_market_data` for current quotes, commodities, and FX. For what the
    news is saying about a company, sector, or economy right now, use
@@ -413,7 +422,10 @@ Relevant schemas/datasets (from the parent's catalog step): {hints}
 
 Constraints: every tool result is capped at 50 rows, so aggregate in SQL to
 the grain the finding needs; compute derived metrics (YoY, ratios, indices)
-yourself from the fetched values.
+yourself from the fetched values. Year-over-year is the same period one year
+earlier matched by date (get_series with transform="yoy_pct", series_math.py
+yoy, or an exact-date SQL join), never a 12-row offset. Report any
+coverage_note / missing_periods from the tool results in your findings.
 
 Return your findings as a structured block:
 
@@ -576,6 +588,12 @@ which is also all it needs.
 - **Zero rows** — your filter was too narrow. Broaden it yourself (see
   `references/data/sql-guide.md`). `auto_retry=true` opts into a server-side LLM
   reviser, but you can usually revise better and cheaper yourself.
+- **`coverage_note` on a result** — not an error: the rows skip the periods in
+  `missing_periods` (a month the source never published, or one the query
+  window cut off). Any period-over-period figure built with a fixed row
+  offset (`LAG(value, 12)`, `shift(12)`, "the row 12 back") over those rows
+  is wrong from the first gap onward. Recompute by matching dates, name the
+  missing periods in the answer, and label partial aggregates as partial.
 - **SQL timeout** — statements are capped at 30s. Filter on indexed columns
   (`series_id`, `dataset_code`) instead of scanning titles, and never
   pattern-match `series_id` on `data_points` — resolve ids from `series` first

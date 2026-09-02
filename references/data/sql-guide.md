@@ -32,6 +32,10 @@ The `get_data_catalog` tool returns the full DDL.
   `'annual'`, `'weekly'`, `'semiannual'`. `frequency = 'Monthly'` matches
   nothing.
 - **`dataset_code` is lowercase** — use ILIKE or lowercase literals.
+- **`data_points.time` is the period start**: a monthly observation is stored
+  on the first of its month, a quarterly one on the first day of its quarter.
+  `time - interval '1 year'` and `time - interval '1 month'` therefore land
+  exactly on the prior period's stored date.
 - The server rewrites `series_title` to
   `COALESCE(human_friendly_title, series_title)` automatically, normalizes
   frequency filters, and turns `data_points.series_id` pattern filters into
@@ -125,6 +129,64 @@ fragment instead:
 
 Never chart a single state/region as if it were the national figure. If you
 can't find the national aggregate, say so rather than substituting.
+
+## Year-over-year on monthly data — never use LAG(value, 12)
+
+A row offset equals a period offset only when every period is present. Series
+have holes: a month the source never published, a quarter outside the
+requested window, a period a WHERE clause removed. After a hole,
+`LAG(value, 12)` compares each month with the month **thirteen** periods back,
+the numbers stay plausible, and nothing errors.
+
+Bad — silently wrong after any gap:
+
+```sql
+SELECT time, 100 * (value / LAG(value, 12) OVER (ORDER BY time) - 1) AS yoy_pct
+FROM data_points
+WHERE series_id = 'CUUR0000SA0' AND time >= '2019-01-01'
+ORDER BY time
+```
+
+Good — join on the exact date, so a missing prior period gives no row (or a
+null with a LEFT JOIN) instead of a wrong number:
+
+```sql
+SELECT cur.time,
+       100 * (cur.value / prior.value - 1) AS yoy_pct
+FROM data_points cur
+JOIN data_points prior
+  ON prior.series_id = cur.series_id
+ AND prior.time = cur.time - interval '1 year'
+WHERE cur.series_id = 'CUUR0000SA0' AND cur.time >= '2020-01-01'
+ORDER BY cur.time
+```
+
+Also good — build a complete date spine first; on a spine every period has a
+row, so a row offset is a period offset and LAG is correct:
+
+```sql
+WITH spine AS (
+  SELECT generate_series('2019-01-01'::timestamp, '2026-06-01', interval '1 month') AS time
+),
+cpi AS (
+  SELECT s.time, d.value
+  FROM spine s
+  LEFT JOIN data_points d ON d.time = s.time AND d.series_id = 'CUUR0000SA0'
+)
+SELECT time, value, 100 * (value / LAG(value, 12) OVER (ORDER BY time) - 1) AS yoy_pct
+FROM cpi WHERE time >= '2020-01-01' ORDER BY time
+```
+
+For one series, `get_series` with `transform="yoy_pct"` (or `"yoy_diff"` for a
+rate) does the date-matched calculation on the server. For several series or
+a merged table, `scripts/series_math.py yoy` matches on the calendar period
+too.
+
+The result's `coverage_note` and `missing_periods` name the holes in the rows
+you received, and `run_sql` says so when the statement itself uses a fixed
+LAG/LEAD offset over time. Act on them: state the missing period(s) in the
+answer, leave the month blank in a chart rather than interpolating, and label
+an aggregate that spans a hole as partial ("Q4 2025 average of two months").
 
 ## HS trade datasets
 
@@ -301,6 +363,10 @@ WHERE series_id IN ('LNS14000000', 'LNS11300000')
 GROUP BY time
 ORDER BY time
 ```
+
+A period with no row in `data_points` is absent from the pivot, not a null
+cell: the time axis skips it. Read the result's `coverage_note` before
+computing changes across rows.
 
 ## Tabular data
 

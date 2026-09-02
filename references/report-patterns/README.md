@@ -121,6 +121,11 @@ instantiation takes. The frequent case:
   warehouse lacks a required counter-check (current OMO detail, services
   trade, distributional tax data), say so in the report — a named data gap is
   itself a finding about how confident the synthesis can be.
+- **A missing period is disclosed, not bridged.** When a fetch carries a
+  `coverage_note`, the periods it names are absent from the data: say so in
+  the report, leave them blank in charts, and label an aggregate that spans
+  one as partial. Never estimate the missing value or let a row-offset
+  calculation slide over it.
 - **Measured vs inferred, always labeled.** Thesis and antithesis are fetched
   numbers; the synthesis is interpretation and must be presented as such,
   resting explicitly on the evidence from both passes.
