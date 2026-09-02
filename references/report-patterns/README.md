@@ -13,7 +13,7 @@ not just how you write it up.
 
 **Before choosing a pattern:** if the request is vague, high-commitment, or
 could reasonably become several different reports, run the
-explorer-agent interview in `interview-step.md` first. The interview clarifies
+interview in `interview-step.md` first. The interview clarifies
 scope, audience, detail level, and success criteria; then the selected pattern
 still supplies the thesis, antithesis, synthesis, and data work.
 

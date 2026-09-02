@@ -119,10 +119,9 @@ Rules:
 
 ## Data lineage (`lineage`)
 
-Always include a `lineage` DAG in the spec. The share page renders it as a
-"How we built this" panel; without it the chart shows only the one-line
-Data Source citation. It records the steps you actually took — searches,
-SQL, computations — ending in a single `output` node:
+Always include a `lineage` DAG in the spec. It is the chart's audit trail:
+the steps you actually took — searches, SQL, computations — ending in a
+single `output` node:
 
 ```json
 "lineage": {
@@ -175,8 +174,8 @@ Two rules the panel depends on:
   one-line paraphrase.
 - **`series_refs` is the complete list.** Include every series the step
   actually used — every id in the query's `IN (...)` list or filter, with
-  its real title — not one representative example. Each ref becomes a link
-  on the share page; readers use them to audit the chart. If a query
+  its real title — not one representative example. Readers use the refs to
+  audit the chart. If a query
   aggregates a very large set (say 40+ series), list the largest
   contributors and state the full count in `summary`.
 

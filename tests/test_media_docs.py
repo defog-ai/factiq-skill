@@ -61,11 +61,10 @@ class MediaDocumentationContractTests(unittest.TestCase):
             "pressure_points",
             "appearances",
             "coverage",
-            "all",
-            "videos",
-            "companies",
         ):
             self.assertIn(f"`{target}`", SKILL_MEDIA)
+        for retired_alias in ("`all`", "`videos`", "`companies`"):
+            self.assertNotIn(retired_alias, SKILL_MEDIA)
 
     def test_retrieval_is_deterministic_strict_loose_then_trigram(self):
         for text in (SKILL_MEDIA, PLAYBOOK, SCHEMAS_MEDIA):

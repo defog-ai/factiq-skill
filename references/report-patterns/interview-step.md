@@ -1,15 +1,15 @@
-# Explorer-Agent Interview Step
+# Interview Step
 
 Use this reference before detailed report generation when the user's request
-is vague, high stakes, or contains a major unresolved choice. The
-interview is a short clarification pass run by an explorer agent before data
-fetching and report construction.
+is vague, high stakes, or contains a major unresolved choice. The interview
+is a short clarification pass, run in the main conversation before data
+fetching and report construction. Ask the user directly; a background
+subagent cannot.
 
-The explorer agent is used because it can resolve intent, audience, scope, and
-decision criteria without prematurely committing the main report workflow to a
-dataset, chart structure, or argument. It reduces wasted data work and makes
-the eventual synthesis answer the user's real decision, not merely the easiest
-interpretation of the prompt.
+The interview resolves intent, audience, scope, and decision criteria before
+the workflow commits to a dataset, chart structure, or argument. It reduces
+wasted data work and makes the eventual synthesis answer the user's real
+decision, not merely the easiest interpretation of the prompt.
 
 This step does not replace the report-pattern dialectical method. After the
 interview, the selected playbook still runs thesis, antithesis, and synthesis:

@@ -50,13 +50,9 @@ The default report shape is 3-4 sections:
    `references/output/report-spec.md`), never as a table whose cells are
    sentences.
 
-For trade-balance or deficit tables, choose row granularity by window and
-purpose, not by a categorical monthly or yearly default. Keep monthly charts
-for timing and seasonality. Monthly table rows are reasonable for shorter
-multi-year windows, roughly up to 3-5 years, when the story depends on turning
-points; for longer windows, especially 5+ years, prefer annual totals, YTD
-comparisons, latest/prior snapshots, or a few selected turning points so the
-table stays readable.
+Keep monthly charts for timing and seasonality. For trade-balance or deficit
+tables, follow the granularity note in `references/output/report-spec.md`:
+monthly rows for short windows, annual or YTD summaries for long ones.
 
 ## Data workflow
 
