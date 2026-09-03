@@ -1,7 +1,7 @@
 {
   "name": "factiq",
   "description": "Answer economic and financial data questions with real data from FactIQ — official statistics, market data, earnings-call transcripts, executive media appearances, a curated business-news feed, and satellite-derived data (nighttime lights, shipping and port activity, reservoir levels, crop fires and wildfires with mappable footprints, NO2/SO2/CO activity, smoke and dust aerosol, monsoon rainfall) — return sourced answers, terminal previews, or report JSON.",
-  "version": "0.33.1",
+  "version": "0.34.0",
   "author": {
     "name": "FactIQ",
     "url": "https://www.factiq.com"
