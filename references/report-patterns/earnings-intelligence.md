@@ -31,8 +31,9 @@ ticker exactly. `company_name="NVIDIA Corporation"` resolves the name to
 every stored ticker that fits it best (a name shared by two listings selects
 both), and the response reports the resolution in `company_name_matched`. A
 value that resolved to nothing is listed under `company_unmatched` with
-possible matches. A company name passed in `company_filter` is refused with
-an error that names the right parameter. Treat its live
+possible matches. A company name passed in `company_filter` is still read as
+a name; the response lists it under `company_filter_read_as_name` and the
+note asks for `company_name` next time. Treat its live
 `calls_covered`, `earliest_period`, `latest_period`, and `latest_call_date` as
 the authoritative coverage window; do not rely on a static assumption about
 how many calls exist. If a ticker is not covered, say so and fall back to
