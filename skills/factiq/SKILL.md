@@ -143,7 +143,7 @@ There is no universal "give me everything" option, by design.
 |---|---|
 | `claims` | Lexical search or empty browse; company, exact quarter, family (primary or secondary), claims-only section, detail, limit |
 | `pressure_points` | Lexical search or empty browse; company, exact quarter, linked family, detail, limit. `section` is ignored because these rows are Q&A |
-| `disclosure_profile` | Direct lookup by ticker from the first `company_filter` value or `query`; not text or quarter search; other filters, detail, and limit are ignored |
+| `disclosure_profile` | Direct lookup by the first `company_filter` value (ticker or company name) or `query`; not text or quarter search; other filters, detail, and limit are ignored |
 | `coverage` | Company inventory and limit; query, quarter, family, section, and detail do not narrow it |
 
 Canonical call patterns:

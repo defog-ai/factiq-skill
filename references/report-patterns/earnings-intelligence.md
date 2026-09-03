@@ -24,7 +24,12 @@ consistent with the data", "who mentioned <theme> this quarter".
 ## Before Anything Else: Coverage
 
 `search_earnings_transcripts(search_target="coverage")` — with
-`company_filter` when the question names companies. Treat its live
+`company_filter` when the question names companies. `company_filter` takes
+tickers or company names (`"NVDA"`, `"NVIDIA Corporation"`, or a
+comma-separated list); a name is resolved to the stored ticker, and the
+response reports the resolution in `company_filter_matched` and lists
+possible matches under `company_filter_unmatched` for a value that
+resolved to nothing. Treat its live
 `calls_covered`, `earliest_period`, `latest_period`, and `latest_call_date` as
 the authoritative coverage window; do not rely on a static assumption about
 how many calls exist. If a ticker is not covered, say so and fall back to
@@ -39,7 +44,7 @@ evidence management did not discuss a topic.
 |---|---|---|
 | `claims` | Ranked lexical search; `query=""` browses rows | `company_filter`, exact `quarter_filter`, `claim_family` (primary or secondary family), `section`, `detail`, and `limit`. Every row includes `transcript_id`, `source_block_index`, `qa_turn_id`, and `source_link`; `detail=true` adds `structured_fields`, secondary families, period/horizon, conviction, denominator, and the `falsifiable` flag. |
 | `pressure_points` | Ranked lexical search; `query=""` browses Q&A pressure rows | `company_filter`, exact `quarter_filter`, `claim_family` (the linked family), `detail`, and `limit`. Every row includes the same transcript locator and source-link fields. `section` is ignored because every row is Q&A. `detail=true` adds `tone_note`. |
-| `disclosure_profile` | No text search: direct company lookup | Uses the first ticker in `company_filter`, or `query` as the ticker. It is accumulated at company level. `quarter_filter` is ignored; `claim_family`, `section`, `detail`, and `limit` are also ignored. |
+| `disclosure_profile` | No text search: direct company lookup | Uses the first `company_filter` value (ticker or company name), or `query` as the ticker. It is accumulated at company level. `quarter_filter` is ignored; `claim_family`, `section`, `detail`, and `limit` are also ignored. |
 | `coverage` | No theme search: corpus inventory | `company_filter` and `limit` apply. `query`, `quarter_filter`, `claim_family`, `section`, and `detail` do not narrow the inventory. |
 
 All targets return at most 50 rows. `coverage` counts are inventory metadata,
