@@ -164,16 +164,17 @@ at-least-one-chart requirement.
     "name": "Bureau of Labor Statistics",
     "program": "Current Population Survey",
     "type": "database",
-    "urls": ["/series/bls::LNS14000000"],
     "titles": ["Unemployment Rate (LNS14000000)"]
   }
 ]
 ```
 
 `name` is required; `type` is `database | web | derived` (default
-`database`). For `database` sources, `urls` are site-relative series links
-(`/series/{schema}::{series_id}`) with matching `titles`. Use `derived` for
-metrics you computed (YoY, indexed, ratios) and `web` for web research.
+`database`). Identify database sources by their organisation, program, and
+series IDs in `titles`. Include `urls` only when the fetched result supplies
+source URLs, with matching `titles`; omit them when unavailable. Do not construct
+links into FactIQ's legacy web interface. Use `derived` for metrics you computed
+(YoY, indexed, ratios) and `web` for web research.
 
 ### Lineage
 
@@ -234,7 +235,6 @@ per narrative, and 5,000 characters for the summary.
                 "name": "Bureau of Labor Statistics",
                 "program": "Current Population Survey",
                 "type": "database",
-                "urls": ["/series/bls::LNS14000000"],
                 "titles": ["Unemployment Rate (LNS14000000)"]
               }
             ],
