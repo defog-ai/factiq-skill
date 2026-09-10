@@ -28,3 +28,18 @@ def test_public_plugin_does_not_reference_retired_publishing_tools():
         f"{offenders}"
     )
 
+
+def test_skill_stops_at_the_publishing_boundary_without_a_website_workaround():
+    skill = " ".join((ROOT / "skills/factiq/SKILL.md").read_text().split())
+    assert "FactIQ cannot host charts or reports publicly" in skill
+    assert "Do not inspect or direct the user" in skill
+    assert "legacy authenticated web interface" in skill
+    assert "probe HTTP endpoints" in skill
+    assert "Never call `send_feedback`" in skill
+    assert "Normal OAuth connection is still supported" in skill
+
+
+def test_report_sources_do_not_construct_links_to_the_legacy_ui():
+    report = (ROOT / "references/output/report-spec.md").read_text()
+    assert "/series/" not in report
+    assert "only when the fetched result supplies" in report
